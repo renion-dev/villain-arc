@@ -1001,7 +1001,7 @@ function showTournament() {
       const votes = Math.floor(Math.random() * 1000) + 100;
       const isLeader = i === 0;
       overlay.innerHTML += '<div style="background:rgba(255,45,85,' + (isLeader ? '0.1' : '0.03') + ');border:1px solid ' + (isLeader ? '#ff2d55' : 'rgba(255,45,85,0.2)') + ';border-radius:12px;padding:1.2rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all 0.3s">' +
-        '<div style="font-size:1.5rem;font-weight:900;color:' + (isLeader ? '#ff9f0a' : '#666');min-width:40px">#' + (i + 1) + '</div>' +
+        '<div style="font-size:1.5rem;font-weight:900;color:' + (isLeader ? '#ff9f0a' : '#666') + ';min-width:40px">#' + (i + 1) + '</div>' +
         '<div style="width:50px;height:50px;border-radius:50%;background:radial-gradient(circle,' + (RARITY[h.r]?.color || '#666') + '40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;border:2px solid ' + (RARITY[h.r]?.color || '#666') + '">' +
         '<span style="font-size:1.5rem">🦹</span></div>' +
         '<div style="flex:1"><div style="color:#fff;font-weight:700;font-size:1.1rem">' + h.n + '</div>' +
