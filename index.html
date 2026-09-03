@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-merch">MERCH</button>
+  <button class="nav-btn" id="b-narration">NARRATION</button>
+<button class="nav-btn" id="b-merch">MERCH</button>
 <button class="nav-btn" id="b-legacy">LEGACY</button>
 <button class="nav-btn" id="b-prophecy">PROPHECY</button>
 <button class="nav-btn" id="b-hidden">HIDDEN</button>
@@ -359,6 +360,72 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== PREMIUM NARRATION =====
+const VOICES = {
+  'male-dark': { name: 'Dark Lord', rate: 0.85, pitch: 0.7, lang: 'en-US' },
+  'female-mystical': { name: 'Mystic Sorceress', rate: 0.9, pitch: 1.2, lang: 'en-US' },
+  'robot-cold': { name: 'Cold Machine', rate: 0.8, pitch: 0.5, lang: 'en-US' },
+  'whisper': { name: 'Dark Whisper', rate: 0.7, pitch: 0.6, lang: 'en-US' },
+  'dramatic': { name: 'Dramatic Narrator', rate: 0.85, pitch: 0.9, lang: 'en-US' }
+};
+
+let synth = null;
+let currentUtterance = null;
+
+function initSpeech() {
+  if (synth) return;
+  synth = window.speechSynthesis;
+}
+
+function narrateStory(voiceType = 'dramatic') {
+  if (!arc || !synth) return;
+  
+  // Stop any current narration
+  synth.cancel();
+  
+  const voice = VOICES[voiceType] || VOICES['dramatic'];
+  
+  // Build narration text
+  const text = `Behold the origin of ${arc.villainName}, "${arc.epithet}". ${arc.backstory} Threat level: ${arc.threat.l}. Power: ${arc.power}. ${arc.quote}`;
+  
+  currentUtterance = new SpeechSynthesisUtterance(text);
+  currentUtterance.rate = voice.rate;
+  currentUtterance.pitch = voice.pitch;
+  currentUtterance.lang = voice.lang;
+  
+  // Try to find a matching voice
+  const voices = synth.getVoices();
+  const match = voices.find(v => v.lang.includes('en') && v.name.toLowerCase().includes('male')) || voices[0];
+  if (match) currentUtterance.voice = match;
+  
+  synth.speak(currentUtterance);
+}
+
+function stopNarration() {
+  if (synth) synth.cancel();
+}
+
+function showNarration() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  c.innerHTML += '<div class="narration-header"><span class="narration-icon">🎙️</span><span class="narration-title">PREMIUM NARRATION</span><span class="narration-sub">Listen to your origin story</span></div>';
+  
+  if (!arc) {
+    c.innerHTML += '<p class="empty-msg">Generate a villain first to hear the narration!</p>';
+  } else {
+    c.innerHTML += '<div class="narration-preview"><span class="narration-villain">' + arc.villainName + '</span><span class="narration-epithet">' + arc.epithet + '</span></div>';
+    
+    c.innerHTML += '<h4 style="color:#ff2d55;margin:1rem 0">CHOOSE YOUR NARRATOR</h4>';
+    Object.entries(VOICES).forEach(([id, v]) => {
+      c.innerHTML += '<button class="voice-btn" data-voice="' + id + '"><span class="voice-name">' + v.name + '</span><span class="voice-desc">Rate: ' + v.rate + ' | Pitch: ' + v.pitch + '</span></button>';
+    });
+    
+    c.innerHTML += '<div class="narration-controls"><button class="control-btn" id="btn-stop">⏹ STOP</button></div>';
+  }
+  
+  openModal('universe');
 }
 
 // ===== MERCH API =====
@@ -1422,6 +1489,7 @@ $('b-hidden').addEventListener('click', showHiddenVillains);
 $('b-prophecy').addEventListener('click', showProphecy);
 $('b-legacy').addEventListener('click', showLegacy);
 $('b-merch').addEventListener('click', showMerch);
+$('b-narration').addEventListener('click', () => { initSpeech(); showNarration(); });
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
@@ -1431,6 +1499,17 @@ $('b-down').addEventListener('click', shareDownload);
 $('sh-copy').addEventListener('click', () => { shareCopy(); closeModal('share'); });
 $('sh-twitter').addEventListener('click', () => { shareTwitter(); closeModal('share'); });
 $('sh-download').addEventListener('click', () => { shareDownload(); closeModal('share'); });
+
+// Narration buttons (delegation)
+document.addEventListener('click', (e) => {
+  if (e.target.closest('.voice-btn')) {
+    const voice = e.target.closest('.voice-btn').dataset.voice;
+    narrateStory(voice);
+  }
+  if (e.target.closest('#btn-stop')) {
+    stopNarration();
+  }
+});
 
 // Init
 updateUI();
