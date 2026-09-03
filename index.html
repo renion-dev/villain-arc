@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-prophecy">PROPHECY</button>
+  <button class="nav-btn" id="b-legacy">LEGACY</button>
+<button class="nav-btn" id="b-prophecy">PROPHECY</button>
 <button class="nav-btn" id="b-hidden">HIDDEN</button>
 <button class="nav-btn" id="b-tournament">TOURNAMENT</button>
 <button class="nav-btn" id="b-relations">RELATIONS</button>
@@ -357,6 +358,38 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== VILLAIN LEGACY =====
+function showLegacy() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  c.innerHTML += '<div class="legacy-header"><span class="legacy-icon">👑</span><span class="legacy-title">VILLAIN LEGACY</span><span class="legacy-sub">Your dynasty of darkness</span></div>';
+  
+  if (state.history.length === 0) {
+    c.innerHTML += '<p class="empty-msg">No legacy yet. Generate your first villain!</p>';
+  } else {
+    // Group by faction
+    const factions = {};
+    state.history.forEach(h => {
+      if (!h.f) return;
+      const fid = h.f.id;
+      if (!factions[fid]) factions[fid] = { name: h.f.name, color: h.f.color, count: 0, strongest: h };
+      factions[fid].count++;
+      if (h.t === 'S' || (h.t === 'A' && factions[fid].strongest.t !== 'S')) {
+        factions[fid].strongest = h;
+      }
+    });
+    
+    Object.values(factions).forEach(f => {
+      c.innerHTML += '<div class="legacy-faction" style="border-left:3px solid ' + f.color + '"><span class="legacy-faction-name" style="color:' + f.color + '">' + f.name + '</span><span class="legacy-count">' + f.count + ' members</span><span class="legacy-strongest">Strongest: ' + f.strongest.n + '</span></div>';
+    });
+    
+    // Dynasty stats
+    c.innerHTML += '<div class="legacy-stats"><div class="legacy-stat"><span class="legacy-num">' + Object.keys(factions).length + '</span><span class="legacy-l">Factions</span></div><div class="legacy-stat"><span class="legacy-num">' + state.unique + '</span><span class="legacy-l">Unique</span></div></div>';
+  }
+  
+  openModal('universe');
 }
 
 // ===== PROPHECY SYSTEM =====
@@ -1170,6 +1203,7 @@ $('b-relations').addEventListener('click', showRelationships);
 $('b-tournament').addEventListener('click', showTournament);
 $('b-hidden').addEventListener('click', showHiddenVillains);
 $('b-prophecy').addEventListener('click', showProphecy);
+$('b-legacy').addEventListener('click', showLegacy);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
