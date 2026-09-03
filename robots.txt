@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://renion-dev.github.io/villain-arc/sitemap.xml
