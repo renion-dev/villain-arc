@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-legacy">LEGACY</button>
+  <button class="nav-btn" id="b-merch">MERCH</button>
+<button class="nav-btn" id="b-legacy">LEGACY</button>
 <button class="nav-btn" id="b-prophecy">PROPHECY</button>
 <button class="nav-btn" id="b-hidden">HIDDEN</button>
 <button class="nav-btn" id="b-tournament">TOURNAMENT</button>
@@ -358,6 +359,31 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== MERCH API =====
+const MERCH_TEMPLATES = [
+  { id: 'tshirt', name: 'T-Shirt', price: 24.99, desc: 'Premium cotton with villain portrait' },
+  { id: 'hoodie', name: 'Hoodie', price: 44.99, desc: 'Warm and dark, like your villain' },
+  { id: 'poster', name: 'Poster', price: 14.99, desc: 'High-quality print of your villain' },
+  { id: 'mug', name: 'Mug', price: 12.99, desc: 'Drink from the darkness' },
+  { id: 'sticker', name: 'Sticker Pack', price: 7.99, desc: 'Show your villain pride' }
+];
+
+function showMerch() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  c.innerHTML += '<div class="merch-header"><span class="merch-icon">🛍️</span><span class="merch-title">VILLAIN MERCH</span><span class="merch-sub">Wear your darkness</span></div>';
+  
+  if (!arc) {
+    c.innerHTML += '<p class="empty-msg">Generate a villain first to create merch!</p>';
+  } else {
+    MERCH_TEMPLATES.forEach(m => {
+      c.innerHTML += '<div class="merch-card"><span class="merch-name">' + m.name + '</span><span class="merch-desc">' + m.desc + '</span><span class="merch-price">$' + m.price + '</span><button class="merch-btn" data-id="' + m.id + '">ADD TO CART</button></div>';
+    });
+  }
+  
+  openModal('universe');
 }
 
 // ===== VILLAIN LEGACY =====
@@ -1395,6 +1421,7 @@ $('b-tournament').addEventListener('click', showTournament);
 $('b-hidden').addEventListener('click', showHiddenVillains);
 $('b-prophecy').addEventListener('click', showProphecy);
 $('b-legacy').addEventListener('click', showLegacy);
+$('b-merch').addEventListener('click', showMerch);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
