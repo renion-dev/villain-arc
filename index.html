@@ -106,6 +106,7 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 .gallery-epithet{font-family:var(--font-quote);font-size:0.7rem;font-style:italic;color:var(--accent2)}
 .gallery-threat{font-family:var(--font-display);font-size:0.7rem;font-weight:700}
 .gallery-rarity{font-family:var(--font-body);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:0.3rem}
+.gallery-faction{font-family:var(--font-body);font-size:0.55rem;margin-top:0.2rem;opacity:0.7}
 .empty-msg{grid-column:1/-1;text-align:center;color:var(--text3);font-style:italic;padding:2rem;font-family:var(--font-body);font-size:0.85rem}
 
 /* Achievements */
@@ -216,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-nemesis" disabled>NEMESIS</button>
+  <button class="nav-btn" id="b-universe">UNIVERSE</button>
+<button class="nav-btn" id="b-nemesis" disabled>NEMESIS</button>
   <button class="nav-btn" id="b-gallery">GALLERY</button>
   <button class="nav-btn" id="b-awards">AWARDS</button>
   <button class="nav-btn primary" id="b-share">SHARE</button>
@@ -232,6 +234,14 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <div class="result-text" id="result"></div>
 
 <!-- Modals -->
+<div class="modal-overlay" id="m-universe">
+  <div class="modal">
+    <span class="modal-close" id="c-universe">&times;</span>
+    <h3 class="modal-title">VILLAIN UNIVERSE</h3>
+    <div id="universe-content"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="m-daily">
   <div class="modal">
     <span class="modal-close" id="c-daily">&times;</span>
@@ -345,6 +355,26 @@ function rollRarity(r) {
   return 'common';
 }
 
+// ===== VILLAIN UNIVERSE =====
+const FACTIONS = [
+  { id: 'shadow',   name: 'Shadow Syndicate',  color: '#bf5af2', desc: 'Masters of stealth and deception' },
+  { id: 'iron',     name: 'Iron Legion',       color: '#ff9f0a', desc: 'Warriors of conquest and destruction' },
+  { id: 'void',     name: 'Void Collective',    color: '#64d2ff', desc: 'Seekers of forbidden knowledge' },
+  { id: 'blood',    name: 'Blood Covenant',    color: '#ff2d55', desc: 'Dark sorcerers and ritualists' },
+  { id: 'storm',    name: 'Storm Empire',      color: '#30d158', desc: 'Rulers of nature and chaos' }
+];
+
+const REGIONS = [
+  { id: 'abyss',    name: 'The Abyss',         desc: 'Darkness eternal',       bonus: 'Shadow' },
+  { id: 'citadel',  name: 'Iron Citadel',      desc: 'Fortress of war',       bonus: 'Iron' },
+  { id: 'void',     name: 'Void Nexus',        desc: 'Reality fractures here', bonus: 'Void' },
+  { id: 'crypt',    name: 'Blood Crypt',       desc: 'Ancient rituals',        bonus: 'Blood' },
+  { id: 'tempest',  name: 'Tempest Peak',      desc: 'Eternal storm',         bonus: 'Storm' }
+];
+
+function getFaction(r) { return pick(FACTIONS, r); }
+function getRegion(r) { return pick(REGIONS, r); }
+
 // ===== EVOLUTION SYSTEM =====
 const EVOLUTION = {
   1:  { name: 'Minion',      title: 'A humble beginning',        color: '#a0a0a0', size: 1.0 },
@@ -390,7 +420,7 @@ const ACH = [
   {id:'speed',name:'Speed Demon',desc:'3 in one session',icon:'⚡',c:s=>s.session>=3},
   {id:'all',name:'Completionist',desc:'All achievements',icon:'👑',c:s=>s.ach.size>=13}
 ];
-function gs(){return{total:0,unique:0,nemesis:0,streak:0,bestStreak:0,lastVisit:null,session:0,shared:0,daily:0,night:false,poses:new Set(),threats:new Set(),collected:new Set(),ach:new Set(),history:[]}}
+function gs(){return{total:0,unique:0,nemesis:0,streak:0,bestStreak:0,lastVisit:null,session:0,shared:0,daily:0,night:false,poses:new Set(),threats:new Set(),collected:new Set(),ach:new Set(),history:[],factions:new Set()}}
 function load(){try{const s=JSON.parse(localStorage.getItem(SK));if(s)return{...gs(),...s,poses:new Set(s.poses||[]),threats:new Set(s.threats||[]),collected:new Set(s.collected||[]),ach:new Set(s.ach||[])}}catch(e){}return gs()}
 function save(){try{const s={...state,poses:[...state.poses],threats:[...state.threats],collected:[...state.collected],ach:[...state.ach]};localStorage.setItem(SK,JSON.stringify(s))}catch(e){}}
 let state = load();
@@ -407,7 +437,9 @@ function generate(name, trigger) {
   const template = pick(STORY_TEMPLATES, r);
   const backstory = template.replace(/{name}/g, name).replace(/{trigger}/g, trigger).replace("{villain}", villain).replace("{power}", power.toLowerCase());
   const rarity = rollRarity(r);
-  return { villainName: villain, epithet, power, threat, quote, backstory, rarity };
+  const faction = getFaction(r);
+  const region = getRegion(r);
+  return { villainName: villain, epithet, power, threat, quote, backstory, rarity, faction, region };
 }
 
 function dailyVillain() {
@@ -437,7 +469,8 @@ function updateState(arc) {
     state.bestStreak = Math.max(state.bestStreak, state.streak);
     state.lastVisit = today;
   }
-  state.history.unshift({ n: arc.villainName, e: arc.epithet, p: arc.power, t: arc.threat.l, r: arc.rarity, d: Date.now() });
+  state.history.unshift({ n: arc.villainName, e: arc.epithet, p: arc.power, t: arc.threat.l, r: arc.rarity, f: arc.faction, g: arc.region, d: Date.now() });
+  state.factions.add(arc.faction.id);
   if (state.history.length > 50) state.history.pop();
   checkAch(); save();
 }
@@ -749,7 +782,7 @@ function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add
 function toastAch(a) { $('ach-text').textContent = a.name; $('ach-toast').classList.add('show'); sfxChord([400, 600, 800]); setTimeout(() => $('ach-toast').classList.remove('show'), 3000); }
 function openModal(id) { $('m-' + id).classList.add('active'); }
 function closeModal(id) { $('m-' + id).classList.remove('active'); }
-['daily', 'gallery', 'awards', 'share'].forEach(m => { $('c-' + m).addEventListener('click', () => closeModal(m)); $('m-' + m).addEventListener('click', e => { if (e.target === $('m-' + m)) closeModal(m); }); });
+['daily', 'gallery', 'awards', 'share', 'universe'].forEach(m => { $('c-' + m).addEventListener('click', () => closeModal(m)); $('m-' + m).addEventListener('click', e => { if (e.target === $('m-' + m)) closeModal(m); }); });
 
 // Reveal
 function startReveal() {
@@ -831,6 +864,30 @@ function startNemesis() {
   }, 2000);
 }
 
+// Universe
+function showUniverse() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  // Factions section
+  c.innerHTML += '<h4 style="color:#ff2d55;margin-bottom:0.8rem">FACTIONS</h4>';
+  FACTIONS.forEach(f => {
+    const count = state.history.filter(h => h.f && h.f.id === f.id).length;
+    c.innerHTML += '<div class="universe-faction" style="border-left:3px solid ' + f.color + '"><span class="faction-name" style="color:' + f.color + '">' + f.name + '</span><span class="faction-desc">' + f.desc + '</span><span class="faction-count">' + count + ' members</span></div>';
+  });
+  
+  // Regions section
+  c.innerHTML += '<h4 style="color:#ff2d55;margin:1.5rem 0 0.8rem">REGIONS</h4>';
+  REGIONS.forEach(r => {
+    const count = state.history.filter(h => h.g && h.g.id === r.id).length;
+    c.innerHTML += '<div class="universe-region"><span class="region-name">' + r.name + '</span><span class="region-desc">' + r.desc + '</span><span class="region-count">' + count + ' villains</span></div>';
+  });
+  
+  // Stats
+  c.innerHTML += '<div class="universe-stats"><div class="stat-box"><span class="stat-num">' + state.factions.size + '</span><span class="stat-l">Factions</span></div><div class="stat-box"><span class="stat-num">' + state.unique + '</span><span class="stat-l">Villains</span></div></div>';
+  
+  openModal('universe');
+}
+
 // Daily
 function showDaily() {
   const d = dailyVillain();
@@ -851,7 +908,7 @@ function showGallery() {
       if (seen.has(k)) return;
       seen.add(k);
       const rc = h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0';
-      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div><div class="gallery-rarity" style="color:' + rc + '">' + (h.r || 'common') + '</div></div>';
+      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div><div class="gallery-rarity" style="color:' + rc + '">' + (h.r || 'common') + '</div><div class="gallery-faction" style="color:' + (h.f ? h.f.color : '#666') + '">' + (h.f ? h.f.name : '') + '</div></div>';
     });
   }
   openModal('gallery');
@@ -906,6 +963,7 @@ function toggleRec() {
 $('btn-reveal').addEventListener('click', startReveal);
 $('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') startReveal(); });
 $('b-daily').addEventListener('click', showDaily);
+$('b-universe').addEventListener('click', showUniverse);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
