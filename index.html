@@ -1035,8 +1035,16 @@ function showTournament() {
     setTimeout(() => overlay.remove(), 1000);
   });
   
-  overlay.querySelector('#btn-vote').addEventListener('click', () => toast('🗳️ Vote registered!'));
-  overlay.querySelector('#btn-battle').addEventListener('click', () => toast('⚔️ Battle mode coming soon...'));
+  overlay.querySelector('#btn-vote').addEventListener('click', () => showOverlayToast(overlay, '🗳️ Vote registered!'));
+  overlay.querySelector('#btn-battle').addEventListener('click', () => showOverlayToast(overlay, '⚔️ Battle mode coming soon...'));
+}
+
+function showOverlayToast(overlay, msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:absolute;bottom:5rem;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.9);color:#fff;padding:0.8rem 1.5rem;border-radius:8px;font-size:0.9rem;border:1px solid #ff2d55;z-index:201';
+  overlay.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
 }
 
 // ===== RELATIONSHIPS =====
