@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-tournament">TOURNAMENT</button>
+  <button class="nav-btn" id="b-hidden">HIDDEN</button>
+<button class="nav-btn" id="b-tournament">TOURNAMENT</button>
 <button class="nav-btn" id="b-relations">RELATIONS</button>
 <button class="nav-btn" id="b-universe">UNIVERSE</button>
 <button class="nav-btn" id="b-nemesis" disabled>NEMESIS</button>
@@ -355,6 +356,50 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== HIDDEN VILLAINS =====
+const HIDDEN_VILLAINS = [
+  { name: "The First Villain", epithet: "Origin of All Darkness", condition: "Generate on full moon", hint: "Wait for the moon..." },
+  { name: "The Last Villain", epithet: "End of All Things", condition: "Generate at midnight", hint: "The witching hour..." },
+  { name: "The Forgotten One", epithet: "Erased from Existence", condition: "Generate 100 villains", hint: "Persistence is key..." },
+  { name: "The Mirror Villain", epithet: "Your Dark Reflection", condition: "Generate with your own name", hint: "Look within..." },
+  { name: "The Paradox", epithet: "Impossible Being", condition: "Generate during a leap second", hint: "Time is an illusion..." }
+];
+
+function checkHiddenVillains() {
+  const now = new Date();
+  const revelations = [];
+  
+  // Check each hidden villain
+  HIDDEN_VILLAINS.forEach(hv => {
+    if (state.ach.has('hidden_' + hv.name.toLowerCase().replace(/ /g, '_'))) return;
+    
+    let revealed = false;
+    
+    if (hv.condition.includes('midnight') && now.getHours() === 0 && now.getMinutes() === 0) revealed = true;
+    if (hv.condition.includes('100 villains') && state.total >= 100) revealed = true;
+    
+    if (revealed) {
+      state.ach.add('hidden_' + hv.name.toLowerCase().replace(/ /g, '_'));
+      revelations.push(hv);
+    }
+  });
+  
+  return revelations;
+}
+
+function showHiddenVillains() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  c.innerHTML += '<div class="hidden-header"><span class="hidden-icon">🔮</span><span class="hidden-title">HIDDEN VILLAINS</span><span class="hidden-sub">Discover the undiscoverable</span></div>';
+  
+  HIDDEN_VILLAINS.forEach(hv => {
+    const unlocked = state.ach.has('hidden_' + hv.name.toLowerCase().replace(/ /g, '_'));
+    c.innerHTML += '<div class="hidden-card ' + (unlocked ? 'unlocked' : '') + '"><span class="hidden-name">' + (unlocked ? hv.name : '???') + '</span><span class="hidden-epithet">' + (unlocked ? hv.epithet : hv.hint) + '</span><span class="hidden-condition">' + (unlocked ? 'REVEALED' : hv.condition) + '</span></div>';
+  });
+  
+  openModal('universe');
 }
 
 // ===== WEEKLY TOURNAMENT =====
@@ -1075,6 +1120,7 @@ $('b-daily').addEventListener('click', showDaily);
 $('b-universe').addEventListener('click', showUniverse);
 $('b-relations').addEventListener('click', showRelationships);
 $('b-tournament').addEventListener('click', showTournament);
+$('b-hidden').addEventListener('click', showHiddenVillains);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
