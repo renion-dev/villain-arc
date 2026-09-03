@@ -606,6 +606,223 @@ function xpForLevel(level) {
   return Math.floor(100 * Math.pow(1.5, level - 1));
 }
 
+// ===== VILLAIN APPEARANCE =====
+const FACES = [
+  { id: 'angular', name: 'Angular', desc: 'Sharp, defined features' },
+  { id: 'round', name: 'Round', desc: 'Soft, approachable' },
+  { id: 'long', name: 'Long', desc: 'Elegant, elongated' },
+  { id: 'square', name: 'Square', desc: 'Strong, determined' },
+  { id: 'oval', name: 'Oval', desc: 'Balanced, classic' }
+];
+
+const HAIR_STYLES = [
+  { id: 'none', name: 'Bald', desc: 'Clean and menacing' },
+  { id: 'short', name: 'Short', desc: 'Practical and sharp' },
+  { id: 'long', name: 'Long', desc: 'Flowing and wild' },
+  { id: 'mohawk', name: 'Mohawk', desc: 'Rebellious and fierce' },
+  { id: 'bun', name: 'Top Knot', desc: 'Disciplined and focused' },
+  { id: 'wild', name: 'Wild', desc: 'Untamed and chaotic' }
+];
+
+const EXPRESSIONS = [
+  { id: 'neutral', name: 'Neutral', desc: 'Calm and calculating' },
+  { id: 'angry', name: 'Angry', desc: 'Furious and aggressive' },
+  { id: 'smirk', name: 'Smirk', desc: 'Confident and mocking' },
+  { id: 'sad', name: 'Melancholic', desc: 'Sad and brooding' },
+  { id: 'crazy', name: 'Maniacal', desc: 'Unhinged and wild' }
+];
+
+const ACCESSORIES = [
+  { id: 'none', name: 'None', desc: 'Pure villainy' },
+  { id: 'scar', name: 'Scar', desc: 'Battle-worn' },
+  { id: 'eyepatch', name: 'Eyepatch', desc: 'Pirate-like' },
+  { id: 'horns', name: 'Horns', desc: 'Demonic' },
+  { id: 'crown', name: 'Crown', desc: 'Royalty of darkness' },
+  { id: 'mask', name: 'Mask', desc: 'Mysterious' },
+  { id: 'tattoos', name: 'Tattoos', desc: 'Marked by darkness' }
+];
+
+function getFace(r) { return pick(FACES, r); }
+function getHair(r) { return pick(HAIR_STYLES, r); }
+function getExpression(r) { return pick(EXPRESSIONS, r); }
+function getAccessory(r) { return pick(ACCESSORIES, r); }
+
+function drawFace(cx, hy, rx, ry, s, h1, h2, ac, p, r) {
+  const face = getFace(r);
+  const hair = getHair(r);
+  const expr = getExpression(r);
+  const acc = getAccessory(r);
+  
+  // Face shape
+  ctx.globalAlpha = p * 0.85;
+  
+  // Hair (behind head)
+  if (hair.id !== 'none') {
+    ctx.fillStyle = 'hsl(' + h2 + ',30%,8%)';
+    if (hair.id === 'short' || hair.id === 'bun') {
+      ctx.beginPath();
+      ctx.ellipse(cx, hy - ry * 0.7, rx * 0.9, ry * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (hair.id === 'long' || hair.id === 'wild') {
+      ctx.beginPath();
+      ctx.ellipse(cx, hy - ry * 0.5, rx * 1.1, ry * 0.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+    } else if (hair.id === 'mohawk') {
+      ctx.beginPath();
+      ctx.moveTo(cx, hy - ry * 1.2);
+      ctx.lineTo(cx - rx * 0.3, hy - ry * 0.5);
+      ctx.lineTo(cx + rx * 0.3, hy - ry * 0.5);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+  
+  // Head shape based on face type
+  ctx.fillStyle = 'hsl(' + h1 + ',45%,20%)';
+  if (face.id === 'angular') {
+    ctx.beginPath();
+    ctx.moveTo(cx - rx, hy - ry * 0.3);
+    ctx.lineTo(cx - rx * 0.7, hy - ry);
+    ctx.lineTo(cx + rx * 0.7, hy - ry);
+    ctx.lineTo(cx + rx, hy - ry * 0.3);
+    ctx.lineTo(cx + rx * 0.8, hy + ry * 0.5);
+    ctx.lineTo(cx, hy + ry);
+    ctx.lineTo(cx - rx * 0.8, hy + ry * 0.5);
+    ctx.closePath();
+    ctx.fill();
+  } else if (face.id === 'round') {
+    ctx.beginPath();
+    ctx.ellipse(cx, hy, rx * 0.9, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (face.id === 'long') {
+    ctx.beginPath();
+    ctx.ellipse(cx, hy, rx * 0.7, ry * 1.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (face.id === 'square') {
+    ctx.beginPath();
+    ctx.rect(cx - rx * 0.8, hy - ry, rx * 1.6, ry * 2);
+    ctx.fill();
+  } else {
+    ctx.beginPath();
+    ctx.ellipse(cx, hy, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  
+  // Face shadow
+  ctx.globalAlpha = p * 0.45;
+  const sh = ctx.createLinearGradient(cx - rx, hy, cx + rx, hy);
+  sh.addColorStop(0, 'rgba(0,0,0,0.8)');
+  sh.addColorStop(0.35, 'rgba(0,0,0,0.15)');
+  sh.addColorStop(0.5, 'rgba(0,0,0,0)');
+  sh.addColorStop(0.65, 'rgba(0,0,0,0.15)');
+  sh.addColorStop(1, 'rgba(0,0,0,0.8)');
+  ctx.fillStyle = sh;
+  ctx.beginPath();
+  ctx.ellipse(cx, hy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Eyes based on expression
+  ctx.globalAlpha = p;
+  const ey = hy - 10 * s, es = 25 * s, eg = Math.sin(F * 0.03) * 0.3 + 0.7;
+  
+  // Eye whites
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath();
+  ctx.ellipse(cx - es, ey, 12 * s, 6 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + es, ey, 12 * s, 6 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Iris
+  ctx.fillStyle = 'hsla(' + ac + ',100%,60%,' + eg + ')';
+  ctx.shadowColor = 'hsl(' + ac + ',100%,60%)';
+  ctx.shadowBlur = 25;
+  ctx.beginPath();
+  ctx.ellipse(cx - es, ey, 6 * s, 4 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + es, ey, 6 * s, 4 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  
+  // Pupils
+  ctx.fillStyle = 'hsl(' + ac + ',100%,85%)';
+  ctx.beginPath();
+  ctx.ellipse(cx - es, ey, 3 * s, 3 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(cx + es, ey, 3 * s, 3 * s, 0, 0, Math.PI * 2);
+  ctx.fill();
+  
+  // Expression-based eye modifications
+  if (expr.id === 'angry') {
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(cx - es - 8 * s, ey - 8 * s);
+    ctx.lineTo(cx - es + 8 * s, ey - 4 * s);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(cx + es + 8 * s, ey - 8 * s);
+    ctx.lineTo(cx + es - 8 * s, ey - 4 * s);
+    ctx.stroke();
+  } else if (expr.id === 'smirk') {
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.arc(cx + es * 0.5, hy + 10 * s, 8 * s, 0, Math.PI);
+    ctx.stroke();
+  }
+  
+  // Accessories
+  if (acc.id === 'scar') {
+    ctx.strokeStyle = 'rgba(255,0,0,0.4)';
+    ctx.lineWidth = 2 * s;
+    ctx.beginPath();
+    ctx.moveTo(cx - es - 5 * s, ey - 10 * s);
+    ctx.lineTo(cx - es + 10 * s, ey + 10 * s);
+    ctx.stroke();
+  } else if (acc.id === 'eyepatch') {
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    ctx.ellipse(cx - es, ey, 14 * s, 8 * s, 0, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (acc.id === 'horns') {
+    ctx.fillStyle = 'hsl(' + h2 + ',30%,10%)';
+    ctx.beginPath();
+    ctx.moveTo(cx - rx * 0.6, hy - ry * 0.8);
+    ctx.lineTo(cx - rx * 0.8, hy - ry * 1.3);
+    ctx.lineTo(cx - rx * 0.4, hy - ry * 0.7);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(cx + rx * 0.6, hy - ry * 0.8);
+    ctx.lineTo(cx + rx * 0.8, hy - ry * 1.3);
+    ctx.lineTo(cx + rx * 0.4, hy - ry * 0.7);
+    ctx.fill();
+  } else if (acc.id === 'crown') {
+    ctx.fillStyle = '#ff9f0a';
+    ctx.beginPath();
+    ctx.moveTo(cx - rx * 0.5, hy - ry * 0.9);
+    ctx.lineTo(cx - rx * 0.3, hy - ry * 1.2);
+    ctx.lineTo(cx, hy - ry * 1.0);
+    ctx.lineTo(cx + rx * 0.3, hy - ry * 1.2);
+    ctx.lineTo(cx + rx * 0.5, hy - ry * 0.9);
+    ctx.closePath();
+    ctx.fill();
+  } else if (acc.id === 'tattoos') {
+    ctx.strokeStyle = 'rgba(255,45,85,0.3)';
+    ctx.lineWidth = 1 * s;
+    for (let i = 0; i < 5; i++) {
+      ctx.beginPath();
+      ctx.arc(cx - rx * 0.5 + i * rx * 0.25, hy + ry * 0.3, 3 * s, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  }
+  
+  ctx.restore();
+}
+
 // ===== DYNAMIC PORTRAIT =====
 let mouseX = W / 2, mouseY = H / 2;
 let clickEffect = 0;
@@ -829,35 +1046,9 @@ function drawPort(p) {
 
   // Head with breathing
   const hy = cy - 60 * s + headBreath, rx = 70 * s + r() * 15 * s, ry = 90 * s + r() * 12 * s;
-  const hg = ctx.createRadialGradient(cx, hy, 0, cx, hy, ry);
-  hg.addColorStop(0, 'hsl(' + h1 + ',45%,20%)'); hg.addColorStop(0.7, 'hsl(' + h2 + ',35%,11%)'); hg.addColorStop(1, 'hsl(' + h1 + ',25%,5%)');
-  ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(cx, hy, rx, ry, 0, 0, 6.283); ctx.fill();
-
-  // Face shadow
-  ctx.globalAlpha = p * 0.45;
-  const sh = ctx.createLinearGradient(cx - rx, hy, cx + rx, hy);
-  sh.addColorStop(0, 'rgba(0,0,0,0.8)'); sh.addColorStop(0.35, 'rgba(0,0,0,0.15)'); sh.addColorStop(0.5, 'rgba(0,0,0,0)'); sh.addColorStop(0.65, 'rgba(0,0,0,0.15)'); sh.addColorStop(1, 'rgba(0,0,0,0.8)');
-  ctx.fillStyle = sh; ctx.beginPath(); ctx.ellipse(cx, hy, rx, ry, 0, 0, 6.283); ctx.fill();
-
-  // Eyes with tracking
-  ctx.globalAlpha = p;
-  const ey = hy - 10 * s, es = 25 * s, eg = Math.sin(F * 0.03) * 0.3 + 0.7;
   
-  // Eye whites
-  ctx.fillStyle = 'rgba(255,255,255,0.1)';
-  ctx.beginPath(); ctx.ellipse(cx - es, ey, 12 * s, 6 * s, 0, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + es, ey, 12 * s, 6 * s, 0, 0, 6.283); ctx.fill();
-  
-  // Iris with tracking
-  ctx.fillStyle = 'hsla(' + ac + ',100%,60%,' + eg + ')'; ctx.shadowColor = 'hsl(' + ac + ',100%,60%)'; ctx.shadowBlur = 25;
-  ctx.beginPath(); ctx.ellipse(cx - es + eyeOffsetX, ey + eyeOffsetY, 6 * s, 4 * s, 0, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + es + eyeOffsetX, ey + eyeOffsetY, 6 * s, 4 * s, 0, 0, 6.283); ctx.fill();
-  ctx.shadowBlur = 0;
-  
-  // Pupils
-  ctx.fillStyle = 'hsl(' + ac + ',100%,85%)';
-  ctx.beginPath(); ctx.ellipse(cx - es + eyeOffsetX, ey + eyeOffsetY, 3 * s, 3 * s, 0, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + es + eyeOffsetX, ey + eyeOffsetY, 3 * s, 3 * s, 0, 0, 6.283); ctx.fill();
+  // Draw detailed face
+  drawFace(cx, hy, rx, ry, s, h1, h2, ac, p, r);
 
   // Mask
   if (r() > 0.55) {
