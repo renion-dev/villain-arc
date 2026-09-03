@@ -1902,19 +1902,65 @@ function showDaily() {
 
 // Gallery
 function showGallery() {
-  const g = $('gallery-grid'); g.innerHTML = '';
-  if (!state.history.length) { g.innerHTML = '<p class="empty-msg">No villains yet. Generate one!</p>'; }
-  else {
+  const overlay = document.createElement('div');
+  overlay.id = 'gallery-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
+  
+  overlay.innerHTML = '<button id="gallery-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #bf5af2;margin-bottom:0.5rem;letter-spacing:0.1em">YOUR GALLERY</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">Collection of darkness</p>' +
+    '<div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem">' +
+    '<div style="text-align:center"><span style="font-size:2rem;font-weight:900;color:#ff2d55">' + state.unique + '</span><br><span style="color:#666;font-size:0.8rem">Unique</span></div>' +
+    '<div style="text-align:center"><span style="font-size:2rem;font-weight:900;color:#bf5af2">' + state.total + '</span><br><span style="color:#666;font-size:0.8rem">Total</span></div>' +
+    '<div style="text-align:center"><span style="font-size:2rem;font-weight:900;color:#ff9f0a">' + state.factions.size + '</span><br><span style="color:#666;font-size:0.8rem">Factions</span></div>' +
+    '</div>' +
+    '<div style="width:100%;max-width:1000px">';
+  
+  if (state.history.length === 0) {
+    overlay.innerHTML += '<p class="empty-msg">No villains yet. Generate one!</p>';
+  } else {
+    overlay.innerHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem">';
+    
     const seen = new Set();
-    state.history.forEach(h => {
+    state.history.forEach((h, i) => {
       const k = h.n + '|' + h.e;
       if (seen.has(k)) return;
       seen.add(k);
       const rc = h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0';
-      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div><div class="gallery-rarity" style="color:' + rc + '">' + (h.r || 'common') + '</div><div class="gallery-faction" style="color:' + (h.f ? h.f.color : '#666') + '">' + (h.f ? h.f.name : '') + '</div></div>';
+      const threatC = h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0';
+      const isLegendary = h.r === 'legendary' || h.r === 'mythic';
+      
+      overlay.innerHTML += '<div style="perspective:1000px;animation:card-float 3s ease-in-out infinite;animation-delay:' + (i * 0.1) + 's">' +
+        '<div style="position:relative;width:100%;height:250px;background:linear-gradient(145deg,rgba(255,45,85,0.1),rgba(191,90,242,0.05));border:1px solid ' + rc + '40;border-radius:16px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275)">' +
+        '<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,' + rc + '30,transparent 70%);filter:blur(15px);opacity:0.5"></div>' +
+        '<div style="width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,' + rc + '40,transparent 70%);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;border:2px solid ' + rc + ';box-shadow:0 0 20px ' + rc + '60"><span style="font-size:2.5rem">🦹</span></div>' +
+        '<div style="position:absolute;top:10px;right:10px;background:' + rc + ';color:#000;font-size:0.6rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;text-transform:uppercase">' + (h.r || 'common') + '</div>' +
+        '<h4 style="color:#fff;font-weight:700;font-size:1rem;margin-bottom:0.3rem;text-align:center;text-shadow:0 0 10px ' + rc + '">' + h.n + '</h4>' +
+        '<p style="color:#bf5af2;font-size:0.75rem;font-style:italic;text-align:center;margin-bottom:0.5rem">' + h.e + '</p>' +
+        '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center"><span style="background:' + threatC + '20;color:' + threatC + ';font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">' + h.t + '</span><span style="background:#30d15820;color:#30d158;font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">' + h.p + '</span></div>' +
+        '<div style="position:absolute;bottom:10px;left:10px;color:' + (h.f ? h.f.color : '#666') + ';font-size:0.6rem">' + (h.f ? h.f.name : '') + '</div>' +
+        '</div></div>';
     });
+    
+    overlay.innerHTML += '</div>';
   }
-  openModal('gallery');
+  
+  overlay.innerHTML += '</div>' +
+    '<div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">' +
+    '<button id="btn-export" style="background:linear-gradient(135deg,#ff2d55,#bf5af2);color:#fff;border:none;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">📥 EXPORT ALL</button>' +
+    '<button id="btn-share-gallery" style="background:transparent;border:1px solid #ff2d55;color:#ff2d55;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">📤 SHARE</button>' +
+    '</div>';
+  
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = '1', 50);
+  
+  const style = document.createElement('style');
+  style.textContent = '@keyframes card-float{0%,100%{transform:translateY(0) rotateY(0deg)}50%{transform:translateY(-5px) rotateY(2deg)}}';
+  document.head.appendChild(style);
+  
+  overlay.querySelector('#gallery-close').addEventListener('click', () => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 1000); });
+  overlay.querySelector('#btn-export').addEventListener('click', () => toast('📥 Export coming soon...'));
+  overlay.querySelector('#btn-share-gallery').addEventListener('click', () => shareTwitter());
 }
 
 // ===== GALLERY PAGE =====
