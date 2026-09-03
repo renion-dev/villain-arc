@@ -555,27 +555,6 @@ function stopNarration() {
   if (synth) synth.cancel();
 }
 
-function showNarration() {
-  const c = $('universe-content'); c.innerHTML = '';
-  
-  c.innerHTML += '<div class="narration-header"><span class="narration-icon">🎙️</span><span class="narration-title">PREMIUM NARRATION</span><span class="narration-sub">Listen to your origin story</span></div>';
-  
-  if (!arc) {
-    c.innerHTML += '<p class="empty-msg">Generate a villain first to hear the narration!</p>';
-  } else {
-    c.innerHTML += '<div class="narration-preview"><span class="narration-villain">' + arc.villainName + '</span><span class="narration-epithet">' + arc.epithet + '</span></div>';
-    
-    c.innerHTML += '<h4 style="color:#ff2d55;margin:1rem 0">CHOOSE YOUR NARRATOR</h4>';
-    Object.entries(VOICES).forEach(([id, v]) => {
-      c.innerHTML += '<button class="voice-btn" data-voice="' + id + '"><span class="voice-name">' + v.name + '</span><span class="voice-desc">Rate: ' + v.rate + ' | Pitch: ' + v.pitch + '</span></button>';
-    });
-    
-    c.innerHTML += '<div class="narration-controls"><button class="control-btn" id="btn-stop">⏹ STOP</button></div>';
-  }
-  
-  openModal('universe');
-}
-
 // ===== NARRATION PAGE =====
 let narrationActive = false;
 let soundWaves = [];
@@ -777,51 +756,79 @@ const MERCH_TEMPLATES = [
 ];
 
 function showMerch() {
-  const c = $('universe-content'); c.innerHTML = '';
+  const overlay = document.createElement('div');
+  overlay.id = 'merch-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
   
-  c.innerHTML += '<div class="merch-header"><span class="merch-icon">🛍️</span><span class="merch-title">VILLAIN MERCH</span><span class="merch-sub">Wear your darkness</span></div>';
+  overlay.innerHTML = '<button id="merch-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #30d158;margin-bottom:0.5rem;letter-spacing:0.1em">VILLAIN MERCH</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#30d158;margin-bottom:2rem">Wear your darkness</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem;max-width:800px;width:100%">' +
+    (arc ? MERCH_TEMPLATES.map(m => 
+      '<div style="background:rgba(48,209,88,0.05);border:1px solid rgba(48,209,88,0.2);border-radius:12px;padding:1.5rem;text-align:center;transition:all 0.3s">' +
+      '<span style="font-size:3rem;display:block;margin-bottom:0.5rem">' + (m.id === 'tshirt' ? '👕' : m.id === 'hoodie' ? '🧥' : m.id === 'poster' ? '🖼️' : m.id === 'mug' ? '☕' : '🏷️') + '</span>' +
+      '<span style="color:#fff;font-weight:700;font-size:1rem;display:block;margin-bottom:0.3rem">' + m.name + '</span>' +
+      '<span style="color:#a0a0a0;font-size:0.8rem;display:block;margin-bottom:0.5rem">' + m.desc + '</span>' +
+      '<span style="color:#30d158;font-size:1.2rem;font-weight:700;display:block;margin-bottom:0.8rem">$' + m.price + '</span>' +
+      '<button style="background:linear-gradient(135deg,#30d158,#64d2ff);color:#000;border:none;padding:0.6rem 1.2rem;border-radius:6px;font-weight:600;cursor:pointer;width:100%">ADD TO CART</button>' +
+      '</div>'
+    ).join('') : '<p class="empty-msg">Generate a villain first to create merch!</p>') +
+    '</div>';
   
-  if (!arc) {
-    c.innerHTML += '<p class="empty-msg">Generate a villain first to create merch!</p>';
-  } else {
-    MERCH_TEMPLATES.forEach(m => {
-      c.innerHTML += '<div class="merch-card"><span class="merch-name">' + m.name + '</span><span class="merch-desc">' + m.desc + '</span><span class="merch-price">$' + m.price + '</span><button class="merch-btn" data-id="' + m.id + '">ADD TO CART</button></div>';
-    });
-  }
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = '1', 50);
   
-  openModal('universe');
+  overlay.querySelector('#merch-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
+  });
 }
 
 // ===== VILLAIN LEGACY =====
 function showLegacy() {
-  const c = $('universe-content'); c.innerHTML = '';
+  const overlay = document.createElement('div');
+  overlay.id = 'legacy-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
   
-  c.innerHTML += '<div class="legacy-header"><span class="legacy-icon">👑</span><span class="legacy-title">VILLAIN LEGACY</span><span class="legacy-sub">Your dynasty of darkness</span></div>';
+  overlay.innerHTML = '<button id="legacy-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #ff9f0a;margin-bottom:0.5rem;letter-spacing:0.1em">VILLAIN LEGACY</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#ff9f0a;margin-bottom:2rem">Your dynasty of darkness</p>';
   
   if (state.history.length === 0) {
-    c.innerHTML += '<p class="empty-msg">No legacy yet. Generate your first villain!</p>';
+    overlay.innerHTML += '<p class="empty-msg">No legacy yet. Generate your first villain!</p>';
   } else {
-    // Group by faction
     const factions = {};
     state.history.forEach(h => {
       if (!h.f) return;
       const fid = h.f.id;
       if (!factions[fid]) factions[fid] = { name: h.f.name, color: h.f.color, count: 0, strongest: h };
       factions[fid].count++;
-      if (h.t === 'S' || (h.t === 'A' && factions[fid].strongest.t !== 'S')) {
-        factions[fid].strongest = h;
-      }
+      if (h.t === 'S' || (h.t === 'A' && factions[fid].strongest.t !== 'S')) factions[fid].strongest = h;
     });
     
+    overlay.innerHTML += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:800px;width:100%;margin-bottom:2rem">';
     Object.values(factions).forEach(f => {
-      c.innerHTML += '<div class="legacy-faction" style="border-left:3px solid ' + f.color + '"><span class="legacy-faction-name" style="color:' + f.color + '">' + f.name + '</span><span class="legacy-count">' + f.count + ' members</span><span class="legacy-strongest">Strongest: ' + f.strongest.n + '</span></div>';
+      overlay.innerHTML += '<div style="background:rgba(255,159,10,0.05);border:1px solid ' + f.color + ';border-radius:12px;padding:1.5rem;text-align:center">' +
+        '<span style="color:' + f.color + ';font-weight:700;font-size:1.1rem;display:block;margin-bottom:0.3rem">' + f.name + '</span>' +
+        '<span style="color:#a0a0a0;font-size:0.8rem;display:block;margin-bottom:0.5rem">' + f.count + ' members</span>' +
+        '<span style="color:#ff9f0a;font-size:0.7rem">Strongest: ' + f.strongest.n + '</span>' +
+        '</div>';
     });
+    overlay.innerHTML += '</div>';
     
-    // Dynasty stats
-    c.innerHTML += '<div class="legacy-stats"><div class="legacy-stat"><span class="legacy-num">' + Object.keys(factions).length + '</span><span class="legacy-l">Factions</span></div><div class="legacy-stat"><span class="legacy-num">' + state.unique + '</span><span class="legacy-l">Unique</span></div></div>';
+    overlay.innerHTML += '<div style="display:flex;gap:2rem;justify-content:center">' +
+      '<div style="text-align:center"><span style="font-size:2rem;font-weight:900;color:#ff9f0a">' + Object.keys(factions).length + '</span><br><span style="color:#666;font-size:0.8rem">Factions</span></div>' +
+      '<div style="text-align:center"><span style="font-size:2rem;font-weight:900;color:#bf5af2">' + state.unique + '</span><br><span style="color:#666;font-size:0.8rem">Unique</span></div>' +
+      '</div>';
   }
   
-  openModal('universe');
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = '1', 50);
+  
+  overlay.querySelector('#legacy-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
+  });
 }
 
 // ===== PROPHECY SYSTEM =====
@@ -860,15 +867,33 @@ function generateProphecy() {
 }
 
 function showProphecy() {
-  const c = $('universe-content'); c.innerHTML = '';
+  const overlay = document.createElement('div');
+  overlay.id = 'prophecy-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
   
   const prophecy = generateProphecy();
   
-  c.innerHTML += '<div class="prophecy-header"><span class="prophecy-icon">🔮</span><span class="prophecy-title">PROPHECY</span></div>';
-  c.innerHTML += '<div class="prophecy-text">' + prophecy + '</div>';
-  c.innerHTML += '<div class="prophecy-footer">The future is written in darkness...</div>';
+  overlay.innerHTML = '<button id="prophecy-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #bf5af2;margin-bottom:0.5rem;letter-spacing:0.1em">PROPHECY</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">The future is written in darkness</p>' +
+    '<div style="max-width:600px;text-align:center;background:rgba(191,90,242,0.05);border:1px solid rgba(191,90,242,0.2);border-radius:16px;padding:2rem;margin-bottom:2rem">' +
+    '<span style="font-size:3rem;display:block;margin-bottom:1rem">🔮</span>' +
+    '<p style="color:#fff;font-size:1.2rem;line-height:1.8;font-style:italic">' + prophecy + '</p>' +
+    '</div>' +
+    '<button id="btn-new-prophecy" style="background:linear-gradient(135deg,#bf5af2,#ff2d55);color:#fff;border:none;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">🔄 NEW PROPHECY</button>';
   
-  openModal('universe');
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = '1', 50);
+  
+  overlay.querySelector('#prophecy-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
+  });
+  
+  overlay.querySelector('#btn-new-prophecy').addEventListener('click', () => {
+    overlay.remove();
+    showProphecy();
+  });
 }
 
 // ===== HIDDEN VILLAINS =====
@@ -903,16 +928,32 @@ function checkHiddenVillains() {
 }
 
 function showHiddenVillains() {
-  const c = $('universe-content'); c.innerHTML = '';
+  const overlay = document.createElement('div');
+  overlay.id = 'hidden-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
   
-  c.innerHTML += '<div class="hidden-header"><span class="hidden-icon">🔮</span><span class="hidden-title">HIDDEN VILLAINS</span><span class="hidden-sub">Discover the undiscoverable</span></div>';
+  overlay.innerHTML = '<button id="hidden-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #bf5af2;margin-bottom:0.5rem;letter-spacing:0.1em">HIDDEN VILLAINS</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">Discover the undiscoverable</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;max-width:800px;width:100%">' +
+    HIDDEN_VILLAINS.map(hv => {
+      const unlocked = state.ach.has('hidden_' + hv.name.toLowerCase().replace(/ /g, '_'));
+      return '<div style="background:rgba(191,90,242,' + (unlocked ? '0.1' : '0.02') + ');border:1px solid ' + (unlocked ? '#bf5af2' : 'rgba(191,90,242,0.2)') + ';border-radius:12px;padding:1.5rem;text-align:center;transition:all 0.3s">' +
+        '<span style="font-size:3rem;display:block;margin-bottom:0.5rem">' + (unlocked ? '👹' : '❓') + '</span>' +
+        '<span style="color:' + (unlocked ? '#bf5af2' : '#666') + ';font-weight:700;font-size:1rem;display:block;margin-bottom:0.3rem">' + (unlocked ? hv.name : '???') + '</span>' +
+        '<span style="color:#a0a0a0;font-size:0.8rem;display:block;margin-bottom:0.5rem">' + (unlocked ? hv.epithet : hv.hint) + '</span>' +
+        '<span style="color:' + (unlocked ? '#30d158' : '#ff9f0a') + ';font-size:0.7rem">' + (unlocked ? '✓ REVEALED' : hv.condition) + '</span>' +
+        '</div>';
+    }).join('') +
+    '</div>';
   
-  HIDDEN_VILLAINS.forEach(hv => {
-    const unlocked = state.ach.has('hidden_' + hv.name.toLowerCase().replace(/ /g, '_'));
-    c.innerHTML += '<div class="hidden-card ' + (unlocked ? 'unlocked' : '') + '"><span class="hidden-name">' + (unlocked ? hv.name : '???') + '</span><span class="hidden-epithet">' + (unlocked ? hv.epithet : hv.hint) + '</span><span class="hidden-condition">' + (unlocked ? 'REVEALED' : hv.condition) + '</span></div>';
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = '1', 50);
+  
+  overlay.querySelector('#hidden-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
   });
-  
-  openModal('universe');
 }
 
 // ===== WEEKLY TOURNAMENT =====
@@ -940,7 +981,8 @@ function showTournament() {
   const topVillains = state.history.slice(0, 6);
   if (topVillains.length < 2) {
     c.innerHTML += '<p class="empty-msg">Generate at least 2 villains to participate!</p>';
-  } else {
+    openModal('universe');
+} else {
     c.innerHTML += '<h4 style="color:#ff2d55;margin:1rem 0">VOTE FOR YOUR FAVORITE</h4>';
     topVillains.forEach((h, i) => {
       c.innerHTML += '<div class="tournament-card" data-idx="' + i + '"><span class="tournament-rank">#' + (i + 1) + '</span><span class="tournament-name">' + h.n + '</span><span class="tournament-epithet">' + h.e + '</span><span class="tournament-votes">' + Math.floor(Math.random() * 100) + ' votes</span></div>';
@@ -948,166 +990,6 @@ function showTournament() {
   }
   
   openModal('universe');
-}
-
-// ===== TOURNAMENT PAGE =====
-function showTournament() {
-  const t = getWeeklyTournament();
-  
-  // Create full-screen tournament overlay
-  const overlay = document.createElement('div');
-  overlay.id = 'tournament-overlay';
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:200;
-    background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;
-  `;
-  
-  overlay.innerHTML = `
-    <button class="tournament-close" id="tournament-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px;transition:all 0.3s">✕ CLOSE</button>
-    
-    <div class="tournament-header" style="text-align:center;margin-bottom:2rem">
-      <div class="tournament-icon" style="font-size:4rem;margin-bottom:0.5rem;animation:trophy-bounce 2s ease-in-out infinite">🏆</div>
-      <h2 class="tournament-title" style="font-size:clamp(1.8rem,5vw,3rem);font-weight:900;color:#fff;text-shadow:0 0 30px #ff2d55;margin-bottom:0.5rem;letter-spacing:0.1em">WEEKLY TOURNAMENT</h2>
-      <p class="tournament-theme" style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-style:italic;color:#ff9f0a;margin-bottom:0.5rem">${t.name}</p>
-      <p class="tournament-desc" style="color:#a0a0a0;font-size:1rem">${t.desc}</p>
-    </div>
-    
-    <div class="tournament-timer" style="margin-bottom:2rem;text-align:center">
-      <span style="color:#666;font-size:0.8rem">TOURNAMENT ENDS IN</span>
-      <div class="timer-countdown" style="font-size:2rem;font-weight:900;color:#ff2d55;font-family:'Courier New',monospace" id="tournament-timer">03:14:22:15</div>
-    </div>
-    
-    <div class="tournament-arena" style="width:100%;max-width:700px;margin-bottom:2rem">
-      <h4 style="color:#ff2d55;margin-bottom:1rem;text-align:center;letter-spacing:0.1em">⚔️ BATTLE ARENA ⚔️</h4>
-      <div class="arena-bracket" style="display:flex;flex-direction:column;gap:1rem">
-        ${state.history.length < 2 ? '<p class="empty-msg">Generate at least 2 villains to participate!</p>' : 
-          state.history.slice(0, 6).map((h, i) => {
-            const votes = Math.floor(Math.random() * 1000) + 100;
-            const isLeader = i === 0;
-            return `<div class="arena-card ${isLeader ? 'leader' : ''}" style="background:rgba(255,45,85,${isLeader ? '0.1' : '0.03'});border:1px solid ${isLeader ? '#ff2d55' : 'rgba(255,45,85,0.2)'};border-radius:12px;padding:1.2rem;display:flex;align-items:center;gap:1rem;cursor:pointer;transition:all 0.3s" data-idx="${i}">
-              <div class="arena-rank" style="font-size:1.5rem;font-weight:900;color:${isLeader ? '#ff9f0a' : '#666'};min-width:40px">#${i + 1}</div>
-              <div class="arena-portrait" style="width:50px;height:50px;border-radius:50%;background:radial-gradient(circle,${RARITY[h.r]?.color || '#666'}40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;border:2px solid ${RARITY[h.r]?.color || '#666'}">
-                <span style="font-size:1.5rem">🦹</span>
-              </div>
-              <div class="arena-info" style="flex:1">
-                <div class="arena-name" style="color:#fff;font-weight:700;font-size:1.1rem">${h.n}</div>
-                <div class="arena-epithet" style="color:#bf5af2;font-size:0.8rem;font-style:italic">${h.e}</div>
-                <div class="arena-power" style="color:#30d158;font-size:0.7rem">${h.p}</div>
-              </div>
-              <div class="arena-votes" style="text-align:right">
-                <div class="votes-count" style="font-size:1.3rem;font-weight:900;color:#ff2d55">${votes}</div>
-                <div class="votes-label" style="color:#666;font-size:0.7rem">votes</div>
-              </div>
-              ${isLeader ? '<div class="crown-icon" style="position:absolute;top:-10px;right:-10px;font-size:1.5rem">👑</div>' : ''}
-            </div>`;
-          }).join('')}
-      </div>
-    </div>
-    
-    <div class="tournament-actions" style="display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
-      <button id="btn-vote" style="background:linear-gradient(135deg,#ff2d55,#bf5af2);color:#fff;border:none;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.3s">🗳️ VOTE NOW</button>
-      <button id="btn-battle" style="background:transparent;border:1px solid #ff9f0a;color:#ff9f0a;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.3s">⚔️ BATTLE</button>
-    </div>
-    
-    <div class="tournament-rewards" style="margin-top:2rem;text-align:center">
-      <h4 style="color:#ff9f0a;margin-bottom:0.5rem">🏅 REWARDS</h4>
-      <div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap">
-        <div class="reward-item" style="text-align:center">
-          <span style="font-size:2rem">🥇</span>
-          <div style="color:#fff;font-weight:600">1st Place</div>
-          <div style="color:#666;font-size:0.8rem">Legendary Status</div>
-        </div>
-        <div class="reward-item" style="text-align:center">
-          <span style="font-size:2rem">🥈</span>
-          <div style="color:#fff;font-weight:600">2nd Place</div>
-          <div style="color:#666;font-size:0.8rem">Epic Status</div>
-        </div>
-        <div class="reward-item" style="text-align:center">
-          <span style="font-size:2rem">🥉</span>
-          <div style="color:#fff;font-weight:600">3rd Place</div>
-          <div style="color:#666;font-size:0.8rem">Rare Status</div>
-        </div>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(overlay);
-  
-  // Animate in
-  setTimeout(() => overlay.style.opacity = '1', 50);
-  
-  // Add CSS
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes trophy-bounce {
-      0%, 100% { transform: translateY(0) rotate(-5deg); }
-      50% { transform: translateY(-10px) rotate(5deg); }
-    }
-    @keyframes pulse-border {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255,45,85,0.4); }
-      50% { box-shadow: 0 0 0 10px rgba(255,45,85,0); }
-    }
-    .arena-card {
-      position: relative;
-    }
-    .arena-card:hover {
-      transform: translateX(5px);
-      box-shadow: 0 5px 25px rgba(255,45,85,0.2);
-    }
-    .arena-card.leader {
-      animation: pulse-border 2s ease-in-out infinite;
-    }
-    .tournament-close:hover {
-      background: rgba(255,45,85,0.1) !important;
-      border-color: #ff2d55 !important;
-    }
-    #btn-vote:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 25px rgba(255,45,85,0.5);
-    }
-    #btn-battle:hover {
-      background: rgba(255,159,10,0.1) !important;
-      border-color: #ff9f0a !important;
-    }
-  `;
-  document.head.appendChild(style);
-  
-  // Event listeners
-  overlay.querySelector('#tournament-close').addEventListener('click', () => {
-    overlay.style.opacity = '0';
-    setTimeout(() => overlay.remove(), 1000);
-  });
-  
-  overlay.querySelector('#btn-vote').addEventListener('click', () => {
-    toast('🗳️ Vote registered! Coming soon...');
-  });
-  
-  overlay.querySelector('#btn-battle').addEventListener('click', () => {
-    toast('⚔️ Battle mode coming soon...');
-  });
-  
-  // Start countdown timer
-  const timerEl = overlay.querySelector('#tournament-timer');
-  let timeLeft = 3 * 24 * 60 * 60 + 14 * 60 * 60 + 22 * 60 + 15; // 3 days, 14 hours, 22 min, 15 sec
-  
-  const timerInterval = setInterval(() => {
-    if (!document.body.contains(overlay)) {
-      clearInterval(timerInterval);
-      return;
-    }
-    
-    timeLeft--;
-    if (timeLeft <= 0) timeLeft = 0;
-    
-    const days = Math.floor(timeLeft / (24 * 60 * 60));
-    const hours = Math.floor((timeLeft % (24 * 60 * 60)) / (60 * 60));
-    const mins = Math.floor((timeLeft % (60 * 60)) / 60);
-    const secs = timeLeft % 60;
-    
-    timerEl.textContent = `${String(days).padStart(2, '0')}:${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  }, 1000);
 }
 
 // ===== RELATIONSHIPS =====
@@ -1866,6 +1748,28 @@ function startNemesis() {
   }, 2000);
 }
 
+// Universe
+function showUniverse() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  c.innerHTML += '<h4 style="color:#ff2d55;margin-bottom:0.8rem">FACTIONS</h4>';
+  FACTIONS.forEach(f => {
+    const count = state.history.filter(h => h.f && h.f.id === f.id).length;
+    c.innerHTML += '<div style="border-left:3px solid ' + f.color + ';padding-left:1rem;margin-bottom:0.8rem"><span style="color:' + f.color + ';font-weight:700">' + f.name + '</span><br><span style="color:#666;font-size:0.8rem">' + f.desc + '</span><br><span style="color:#a0a0a0;font-size:0.7rem">' + count + ' members</span></div>';
+    openModal('universe');
+});
+  
+  c.innerHTML += '<h4 style="color:#ff2d55;margin:1.5rem 0 0.8rem">REGIONS</h4>';
+  REGIONS.forEach(r => {
+    const count = state.history.filter(h => h.g && h.g.id === r.id).length;
+    c.innerHTML += '<div style="margin-bottom:0.5rem"><span style="color:#fff;font-weight:600">' + r.name + '</span> - <span style="color:#666;font-size:0.8rem">' + r.desc + '</span> <span style="color:#a0a0a0;font-size:0.7rem">(' + count + ')</span></div>';
+  });
+  
+  c.innerHTML += '<div style="display:flex;gap:2rem;margin-top:1.5rem"><div><span style="font-size:1.5rem;font-weight:900;color:#ff2d55">' + state.factions.size + '</span><br><span style="color:#666;font-size:0.7rem">Factions</span></div><div><span style="font-size:1.5rem;font-weight:900;color:#bf5af2">' + state.unique + '</span><br><span style="color:#666;font-size:0.7rem">Villains</span></div></div>';
+  
+  openModal('universe');
+}
+
 // Relationships
 function showRelationships() {
   if (state.history.length < 2) { toast('Generate at least 2 villains to see relationships!'); return; }
@@ -1892,161 +1796,6 @@ function showRelationships() {
 }
 
 // Universe
-function showUniverse() {
-  const c = $('universe-content'); c.innerHTML = '';
-  
-  // Factions section
-  c.innerHTML += '<h4 style="color:#ff2d55;margin-bottom:0.8rem">FACTIONS</h4>';
-  FACTIONS.forEach(f => {
-    const count = state.history.filter(h => h.f && h.f.id === f.id).length;
-    c.innerHTML += '<div class="universe-faction" style="border-left:3px solid ' + f.color + '"><span class="faction-name" style="color:' + f.color + '">' + f.name + '</span><span class="faction-desc">' + f.desc + '</span><span class="faction-count">' + count + ' members</span></div>';
-  });
-  
-  // Regions section
-  c.innerHTML += '<h4 style="color:#ff2d55;margin:1.5rem 0 0.8rem">REGIONS</h4>';
-  REGIONS.forEach(r => {
-    const count = state.history.filter(h => h.g && h.g.id === r.id).length;
-    c.innerHTML += '<div class="universe-region"><span class="region-name">' + r.name + '</span><span class="region-desc">' + r.desc + '</span><span class="region-count">' + count + ' villains</span></div>';
-  });
-  
-  // Stats
-  c.innerHTML += '<div class="universe-stats"><div class="stat-box"><span class="stat-num">' + state.factions.size + '</span><span class="stat-l">Factions</span></div><div class="stat-box"><span class="stat-num">' + state.unique + '</span><span class="stat-l">Villains</span></div></div>';
-  
-  openModal('universe');
-}
-
-// ===== UNIVERSE PAGE =====
-function showUniverse() {
-  // Create full-screen universe overlay
-  const overlay = document.createElement('div');
-  overlay.id = 'universe-overlay';
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:200;
-    background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;
-  `;
-  
-  overlay.innerHTML = `
-    <button class="universe-close" id="universe-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px;transition:all 0.3s">✕ CLOSE</button>
-    
-    <h2 class="universe-title" style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #ff2d55;margin-bottom:0.5rem;letter-spacing:0.1em">VILLAIN UNIVERSE</h2>
-    <p class="universe-subtitle" style="font-family:'Cormant Garamond',serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">The world of darkness</p>
-    
-    <div class="universe-map-container" style="position:relative;width:100%;max-width:800px;margin-bottom:2rem">
-      <div class="universe-map" style="position:relative;width:100%;height:300px;background:radial-gradient(ellipse at center,#1a0a1a 0%,#0a0508 70%);border-radius:12px;border:1px solid rgba(255,45,85,0.2);overflow:hidden">
-        <div class="map-bg-stars" style="position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 40px 70px, #fff, transparent), radial-gradient(1px 1px at 90px 40px, #fff, transparent), radial-gradient(2px 2px at 130px 80px, #fff, transparent), radial-gradient(1px 1px at 160px 120px, #fff, transparent);background-size:200px 100px;opacity:0.3"></div>
-        
-        <!-- Faction territories -->
-        <div class="faction-territory" style="position:absolute;top:20%;left:15%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#bf5af240 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="shadow">
-          <span style="color:#bf5af2;font-size:0.7rem;text-align:center">Shadow Syndicate</span>
-        </div>
-        <div class="faction-territory" style="position:absolute;top:50%;left:40%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#ff9f0a40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="iron">
-          <span style="color:#ff9f0a;font-size:0.7rem;text-align:center">Iron Legion</span>
-        </div>
-        <div class="faction-territory" style="position:absolute;top:30%;left:65%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#64d2ff40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="void">
-          <span style="color:#64d2ff;font-size:0.7rem;text-align:center">Void Collective</span>
-        </div>
-        <div class="faction-territory" style="position:absolute;top:60%;left:20%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#ff2d5540 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="blood">
-          <span style="color:#ff2d55;font-size:0.7rem;text-align:center">Blood Covenant</span>
-        </div>
-        <div class="faction-territory" style="position:absolute;top:70%;left:60%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#30d15840 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="storm">
-          <span style="color:#30d158;font-size:0.7rem;text-align:center">Storm Empire</span>
-        </div>
-      </div>
-    </div>
-    
-    <div class="universe-factions-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:800px;width:100%;margin-bottom:2rem">
-      ${FACTIONS.map(f => {
-        const count = state.history.filter(h => h.f && h.f.id === f.id).length;
-        return `<div class="faction-card" style="background:rgba(255,45,85,0.05);border:1px solid ${f.color}40;border-radius:12px;padding:1.5rem;cursor:pointer;transition:all 0.3s" data-faction="${f.id}">
-          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem">
-            <div style="width:40px;height:40px;border-radius:50%;background:${f.color}30;display:flex;align-items:center;justify-content:center">
-              <span style="font-size:1.2rem">${f.id === 'shadow' ? '🌑' : f.id === 'iron' ? '⚔️' : f.id === 'void' ? '🌀' : f.id === 'blood' ? '🩸' : '⚡'}</span>
-            </div>
-            <div>
-              <h4 style="color:${f.color};font-weight:700;margin:0">${f.name}</h4>
-              <span style="color:#666;font-size:0.7rem">${count} members</span>
-            </div>
-          </div>
-          <p style="color:#a0a0a0;font-size:0.85rem;margin:0">${f.desc}</p>
-        </div>`;
-      }).join('')}
-    </div>
-    
-    <div class="universe-regions" style="max-width:800px;width:100%;margin-bottom:2rem">
-      <h4 style="color:#ff2d55;margin-bottom:1rem;letter-spacing:0.1em">REGIONS</h4>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.8rem">
-        ${REGIONS.map(r => {
-          const count = state.history.filter(h => h.g && h.g.id === r.id).length;
-          return `<div class="region-card" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:1rem;text-align:center">
-            <span style="display:block;font-size:1.5rem;margin-bottom:0.3rem">${r.id === 'abyss' ? '🕳️' : r.id === 'citadel' ? '🏰' : r.id === 'void' ? '🌌' : r.id === 'crypt' ? '⚰️' : '⛈️'}</span>
-            <span style="display:block;color:#fff;font-weight:600;font-size:0.9rem">${r.name}</span>
-            <span style="display:block;color:#666;font-size:0.7rem">${count} villains</span>
-          </div>`;
-        }).join('')}
-      </div>
-    </div>
-    
-    <div class="universe-stats" style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap">
-      <div style="text-align:center">
-        <span style="display:block;font-size:2rem;font-weight:900;color:#ff2d55">${state.factions.size}</span>
-        <span style="color:#666;font-size:0.8rem">Factions</span>
-      </div>
-      <div style="text-align:center">
-        <span style="display:block;font-size:2rem;font-weight:900;color:#bf5af2">${state.unique}</span>
-        <span style="color:#666;font-size:0.8rem">Villains</span>
-      </div>
-      <div style="text-align:center">
-        <span style="display:block;font-size:2rem;font-weight:900;color:#30d158">${state.total}</span>
-        <span style="color:#666;font-size:0.8rem">Total</span>
-      </div>
-    </div>
-  `;
-  
-  document.body.appendChild(overlay);
-  
-  // Animate in
-  setTimeout(() => overlay.style.opacity = '1', 50);
-  
-  // Add CSS
-  const style = document.createElement('style');
-  style.textContent = `
-    @keyframes territory-pulse {
-      0%, 100% { transform: scale(1); opacity: 0.5; }
-      50% { transform: scale(1.1); opacity: 0.8; }
-    }
-    .faction-territory:hover {
-      transform: scale(1.1) !important;
-      box-shadow: 0 0 30px currentColor;
-    }
-    .faction-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 5px 25px rgba(255,45,85,0.2);
-    }
-    .universe-close:hover {
-      background: rgba(255,45,85,0.1) !important;
-      border-color: #ff2d55 !important;
-    }
-  `;
-  document.head.appendChild(style);
-  
-  // Event listeners
-  overlay.querySelector('#universe-close').addEventListener('click', () => {
-    overlay.style.opacity = '0';
-    setTimeout(() => overlay.remove(), 1000);
-  });
-  
-  // Faction territory click animation
-  overlay.querySelectorAll('.faction-territory').forEach(t => {
-    t.addEventListener('click', () => {
-      t.style.animation = 'territory-pulse 0.5s ease';
-      setTimeout(() => t.style.animation = '', 500);
-    });
-  });
-}
-
-// Daily
 function showDaily() {
   const d = dailyVillain();
   $('daily-card').innerHTML = '<div class="daily-name">' + d.villainName + '</div><div class="daily-epithet">"' + d.epithet + '"</div><div class="daily-power">' + d.power + '</div><div class="daily-threat" style="color:' + d.threat.c + '">' + d.threat.l + ' - ' + d.threat.n + '</div>';
@@ -2073,68 +1822,37 @@ function showGallery() {
 }
 
 // ===== GALLERY PAGE =====
-function showGallery() {
+// ===== AWARDS PAGE =====
+function showAwards() {
   const overlay = document.createElement('div');
-  overlay.id = 'gallery-overlay';
+  overlay.id = 'awards-overlay';
   overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
   
-  let cardsHtml = '';
-  if (state.history.length > 0) {
-    const seen = new Set();
-    state.history.forEach((h, i) => {
-      const k = h.n + '|' + h.e;
-      if (seen.has(k)) return;
-      seen.add(k);
-      const rc = h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0';
-      const threatC = h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0';
-      const isLegendary = h.r === 'legendary' || h.r === 'mythic';
-      cardsHtml += '<div class="gallery-card-3d' + (isLegendary ? ' legendary-glow' : '') + '" style="perspective:1000px;animation:card-float 3s ease-in-out infinite;animation-delay:' + (i * 0.1) + 's">';
-      cardsHtml += '<div class="card-inner" style="position:relative;width:100%;height:250px;background:linear-gradient(145deg,rgba(255,45,85,0.1),rgba(191,90,242,0.05));border:1px solid ' + rc + '40;border-radius:16px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275)">';
-      cardsHtml += '<div class="card-glow" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,' + rc + '30,transparent 70%);filter:blur(15px);opacity:0.5"></div>';
-      cardsHtml += '<div class="card-portrait" style="width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,' + rc + '40,transparent 70%);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;border:2px solid ' + rc + ';box-shadow:0 0 20px ' + rc + '60"><span style="font-size:2.5rem">&#x1F9B9;</span></div>';
-      cardsHtml += '<div class="card-rarity-badge" style="position:absolute;top:10px;right:10px;background:' + rc + ';color:#000;font-size:0.6rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;text-transform:uppercase">' + (h.r || 'common') + '</div>';
-      cardsHtml += '<h4 class="card-name" style="color:#fff;font-weight:700;font-size:1rem;margin-bottom:0.3rem;text-align:center;text-shadow:0 0 10px ' + rc + '">' + h.n + '</h4>';
-      cardsHtml += '<p class="card-epithet" style="color:#bf5af2;font-size:0.75rem;font-style:italic;text-align:center;margin-bottom:0.5rem">' + h.e + '</p>';
-      cardsHtml += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center"><span style="background:' + threatC + '20;color:' + threatC + ';font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">' + h.t + '</span><span style="background:#30d15820;color:#30d158;font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">' + h.p + '</span></div>';
-      cardsHtml += '<div style="position:absolute;bottom:10px;left:10px;color:' + (h.f ? h.f.color : '#666') + ';font-size:0.6rem">' + (h.f ? h.f.name : '') + '</div>';
-      cardsHtml += '</div></div>';
-    });
-  }
-  
-  overlay.innerHTML = '<button id="gallery-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
-    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #bf5af2;margin-bottom:0.5rem;letter-spacing:0.1em">YOUR GALLERY</h2>' +
-    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">Collection of darkness</p>' +
-    '<div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem">' +
-    '<div style="text-align:center"><span style="display:block;font-size:2rem;font-weight:900;color:#ff2d55">' + state.unique + '</span><span style="color:#666;font-size:0.8rem">Unique</span></div>' +
-    '<div style="text-align:center"><span style="display:block;font-size:2rem;font-weight:900;color:#bf5af2">' + state.total + '</span><span style="color:#666;font-size:0.8rem">Total</span></div>' +
-    '<div style="text-align:center"><span style="display:block;font-size:2rem;font-weight:900;color:#ff9f0a">' + state.factions.size + '</span><span style="color:#666;font-size:0.8rem">Factions</span></div>' +
+  overlay.innerHTML = '<button id="awards-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #ffcc00;margin-bottom:0.5rem;letter-spacing:0.1em">ACHIEVEMENTS</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#ffcc00;margin-bottom:2rem">Your dark accomplishments</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1rem;max-width:800px;width:100%">' +
+    ACH.map(a => {
+      const u = state.ach.has(a.id);
+      return '<div style="background:rgba(255,255,255,' + (u ? '0.08' : '0.02') + ');border:1px solid ' + (u ? '#ffcc00' : 'rgba(255,255,255,0.06)') + ';border-radius:12px;padding:1.5rem;text-align:center;transition:all 0.3s">' +
+        '<span style="font-size:2.5rem;display:block;margin-bottom:0.5rem">' + (u ? a.icon : '🔒') + '</span>' +
+        '<span style="color:' + (u ? '#ffcc00' : '#666') + ';font-weight:700;font-size:0.9rem;display:block;margin-bottom:0.3rem">' + a.name + '</span>' +
+        '<span style="color:#a0a0a0;font-size:0.75rem">' + a.desc + '</span>' +
+        '</div>';
+    }).join('') +
     '</div>' +
-    '<div style="width:100%;max-width:1000px">' + (state.history.length === 0 ? '<p class="empty-msg">No villains yet. Generate one!</p>' : '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem">' + cardsHtml + '</div>') + '</div>' +
-    '<div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">' +
-    '<button id="btn-export" style="background:linear-gradient(135deg,#ff2d55,#bf5af2);color:#fff;border:none;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">📥 EXPORT ALL</button>' +
-    '<button id="btn-share-gallery" style="background:transparent;border:1px solid #ff2d55;color:#ff2d55;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">📤 SHARE</button>' +
+    '<div style="margin-top:2rem;text-align:center">' +
+    '<span style="color:#ffcc00;font-size:1.5rem;font-weight:900">' + state.ach.size + '</span>' +
+    '<span style="color:#666;font-size:1rem"> / ' + ACH.length + ' unlocked</span>' +
     '</div>';
   
   document.body.appendChild(overlay);
   setTimeout(() => overlay.style.opacity = '1', 50);
   
-  const style = document.createElement('style');
-  style.textContent = '@keyframes card-float{0%,100%{transform:translateY(0) rotateY(0deg)}50%{transform:translateY(-5px) rotateY(2deg)}}@keyframes legendary-pulse{0%,100%{box-shadow:0 0 20px rgba(255,159,10,0.3)}50%{box-shadow:0 0 40px rgba(255,159,10,0.6),0 0 60px rgba(255,45,85,0.3)}}.gallery-card-3d:hover .card-inner{transform:translateY(-10px) scale(1.02)!important;box-shadow:0 10px 40px rgba(255,45,85,0.3)!important;border-color:#ff2d55!important}.legendary-glow .card-inner{animation:legendary-pulse 2s ease-in-out infinite!important}';
-  document.head.appendChild(style);
-  
-  overlay.querySelector('#gallery-close').addEventListener('click', () => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 1000); });
-  overlay.querySelector('#btn-export').addEventListener('click', () => toast('📥 Export coming soon...'));
-  overlay.querySelector('#btn-share-gallery').addEventListener('click', () => shareTwitter());
-}
-
-// Awards
-function showAwards() {
-  const g = $('awards-grid'); g.innerHTML = '';
-  ACH.forEach(a => {
-    const u = state.ach.has(a.id);
-    g.innerHTML += '<div class="ach-card ' + (u ? 'unlocked' : '') + '"><span class="ach-icon">' + (u ? a.icon : '🔒') + '</span><span class="ach-name">' + a.name + '</span><span class="ach-desc">' + a.desc + '</span></div>';
+  overlay.querySelector('#awards-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
   });
-  openModal('awards');
 }
 
 // Share
