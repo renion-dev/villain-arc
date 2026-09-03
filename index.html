@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-universe">UNIVERSE</button>
+  <button class="nav-btn" id="b-relations">RELATIONS</button>
+<button class="nav-btn" id="b-universe">UNIVERSE</button>
 <button class="nav-btn" id="b-nemesis" disabled>NEMESIS</button>
   <button class="nav-btn" id="b-gallery">GALLERY</button>
   <button class="nav-btn" id="b-awards">AWARDS</button>
@@ -353,6 +354,53 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== RELATIONSHIPS =====
+const REL_TYPES = [
+  { id: 'rival', name: 'Rivals', icon: '⚔️', desc: 'Mortal enemies locked in eternal conflict' },
+  { id: 'ally', name: 'Allies', icon: '🤝', desc: 'Bound by mutual interest or dark pacts' },
+  { id: 'mentor', name: 'Mentor/Student', icon: '🎓', desc: 'Master and apprentice in the dark arts' },
+  { id: 'lover', name: 'Lovers', icon: '🖤', desc: 'Twisted souls connected by dark passion' },
+  { id: 'creator', name: 'Creator/Creation', icon: '🔬', desc: 'The maker and the made' }
+];
+
+function getRelationship(r1, r2) {
+  const h = hash(r1.villainName + '|' + r2.villainName);
+  const r = rng(h);
+  return pick(REL_TYPES, r);
+}
+
+function getRelationshipStory(v1, v2, rel) {
+  const stories = {
+    rival: [
+      `${v1} and ${v2} have been mortal enemies since the Great War. Their battles have shattered kingdoms.`,
+      `${v2} betrayed ${v1} centuries ago. Now they seek vengeance across lifetimes.`,
+      `${v1} was once ${v2}'s closest friend. Now they are each other's greatest threat.`
+    ],
+    ally: [
+      `${v1} and ${v2} formed an unbreakable pact in the depths of the Abyss.`,
+      `Together, ${v1} and ${v2} control the shadows of the underworld.`,
+      `${v2} saved ${v1} from destruction. Now they are bound by dark gratitude.`
+    ],
+    mentor: [
+      `${v1} taught ${v2} the forbidden arts. Now the student surpasses the master.`,
+      `${v2} was once ${v1}'s greatest apprentice. Their bond is unbreakable.`,
+      `${v1} sees great potential in ${v2}. The lessons have only begun.`
+    ],
+    lover: [
+      `${v1} and ${v2} share a bond darker than night itself.`,
+      `Their love is forbidden, their passion destructive. ${v1} and ${v2} are eternal.`,
+      `${v2} would destroy the world for ${v1}. And ${v1} knows it.`
+    ],
+    creator: [
+      `${v1} created ${v2} in a forbidden experiment. Now the creation seeks to destroy the creator.`,
+      `${v2} is ${v1}'s greatest masterpiece — and greatest mistake.`,
+      `${v1} gave ${v2} life. ${v2} gave ${v1} purpose.`
+    ]
+  };
+  const options = stories[rel.id] || stories.rival;
+  return options[Math.floor(Math.random() * options.length)];
 }
 
 // ===== VILLAIN UNIVERSE =====
@@ -864,6 +912,31 @@ function startNemesis() {
   }, 2000);
 }
 
+// Relationships
+function showRelationships() {
+  if (state.history.length < 2) { toast('Generate at least 2 villains to see relationships!'); return; }
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  const seen = new Set();
+  const pairs = [];
+  for (let i = 0; i < Math.min(state.history.length, 10); i++) {
+    for (let j = i + 1; j < Math.min(state.history.length, 10); j++) {
+      const h1 = state.history[i], h2 = state.history[j];
+      const k = h1.n + '|' + h2.n;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      const rel = getRelationship(h1, h2);
+      pairs.push({ v1: h1.n, v2: h2.n, rel, story: getRelationshipStory(h1.n, h2.n, rel) });
+    }
+  }
+  
+  pairs.slice(0, 6).forEach(p => {
+    c.innerHTML += '<div class="rel-card"><span class="rel-icon">' + p.rel.icon + '</span><span class="rel-type">' + p.rel.name + '</span><span class="rel-villains">' + p.v1 + ' & ' + p.v2 + '</span><span class="rel-story">' + p.story + '</span></div>';
+  });
+  
+  openModal('universe');
+}
+
 // Universe
 function showUniverse() {
   const c = $('universe-content'); c.innerHTML = '';
@@ -964,6 +1037,7 @@ $('btn-reveal').addEventListener('click', startReveal);
 $('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') startReveal(); });
 $('b-daily').addEventListener('click', showDaily);
 $('b-universe').addEventListener('click', showUniverse);
+$('b-relations').addEventListener('click', showRelationships);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
