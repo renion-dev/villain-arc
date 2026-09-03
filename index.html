@@ -1245,6 +1245,8 @@ function drawFace(cx, hy, rx, ry, s, h1, h2, ac, p, r) {
   const expr = getExpression(r);
   const acc = getAccessory(r);
   
+  ctx.save();
+  
   // Face shape
   ctx.globalAlpha = p * 0.85;
   
