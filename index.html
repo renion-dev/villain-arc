@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-narration">NARRATION</button>
+  <button class="nav-btn primary" id="b-video">▶ TRAILER</button>
+<button class="nav-btn" id="b-narration">NARRATION</button>
 <button class="nav-btn" id="b-merch">MERCH</button>
 <button class="nav-btn" id="b-legacy">LEGACY</button>
 <button class="nav-btn" id="b-prophecy">PROPHECY</button>
@@ -360,6 +361,153 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== ORIGIN VIDEO =====
+let videoMode = false;
+let videoFrame = 0;
+let videoPhase = 0; // 0:title, 1:portrait, 2:backstory, 3:power, 4:quote, 5:ending
+const VIDEO_PHASES = [
+  { name: 'title', duration: 3000 },
+  { name: 'portrait', duration: 4000 },
+  { name: 'backstory', duration: 5000 },
+  { name: 'power', duration: 3000 },
+  { name: 'quote', duration: 4000 },
+  { name: 'ending', duration: 3000 }
+];
+
+function startOriginVideo() {
+  if (!arc) { toast('Generate a villain first!'); return; }
+  
+  videoMode = true;
+  videoFrame = 0;
+  videoPhase = 0;
+  $('stage').classList.remove('active');
+  
+  // Start narration
+  initSpeech();
+  narrateStory('dramatic');
+  
+  toast('Playing origin trailer...');
+}
+
+function drawVideoFrame() {
+  if (!videoMode || !arc) return;
+  
+  const cx = W / 2, cy = H / 2, s = Math.min(W, H) / 800;
+  const phase = VIDEO_PHASES[videoPhase];
+  
+  // Clear
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, W, H);
+  
+  // Phase-based rendering
+  if (videoPhase === 0) {
+    // Title phase
+    const alpha = Math.min(videoFrame / 30, 1);
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold ' + (W / 15) + 'px Cinzel';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff2d55';
+    ctx.shadowColor = '#ff2d55';
+    ctx.shadowBlur = 40;
+    ctx.fillText('VILLAIN ARC', cx, cy);
+    ctx.shadowBlur = 0;
+    ctx.font = 'italic ' + (W / 35) + 'px Cormorant Garamond';
+    ctx.fillStyle = '#a0a0a0';
+    ctx.fillText('The Cinematic Origin', cx, cy + W / 20);
+  } else if (videoPhase === 1) {
+    // Portrait phase
+    drawPort(1);
+    // Overlay villain name
+    const alpha = Math.min(videoFrame / 20, 1);
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold ' + (W / 20) + 'px Cinzel';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    ctx.shadowColor = RARITY[arc.rarity].color;
+    ctx.shadowBlur = 30;
+    ctx.fillText(arc.villainName.toUpperCase(), cx, H * 0.9);
+    ctx.shadowBlur = 0;
+  } else if (videoPhase === 2) {
+    // Backstory phase
+    drawPort(0.5);
+    const alpha = Math.min(videoFrame / 20, 1);
+    ctx.globalAlpha = alpha;
+    ctx.font = (W / 50) + 'px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#fff';
+    // Word wrap backstory
+    const words = arc.backstory.split(' ');
+    let line = '';
+    let y = H * 0.7;
+    words.forEach(word => {
+      const test = line + word + ' ';
+      if (ctx.measureText(test).width > W * 0.8) {
+        ctx.fillText(line, cx, y);
+        line = word + ' ';
+        y += W / 30;
+      } else {
+        line = test;
+      }
+    });
+    ctx.fillText(line, cx, y);
+  } else if (videoPhase === 3) {
+    // Power phase
+    drawPort(0.8);
+    const alpha = Math.min(videoFrame / 15, 1);
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold ' + (W / 18) + 'px Cinzel';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#30d158';
+    ctx.shadowColor = '#30d158';
+    ctx.shadowBlur = 30;
+    ctx.fillText(arc.power.toUpperCase(), cx, H * 0.85);
+    ctx.shadowBlur = 0;
+  } else if (videoPhase === 4) {
+    // Quote phase
+    drawPort(0.3);
+    const alpha = Math.min(videoFrame / 20, 1);
+    ctx.globalAlpha = alpha;
+    ctx.font = 'italic ' + (W / 35) + 'px Cormorant Garamond';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#bf5af2';
+    ctx.fillText('"' + arc.quote + '"', cx, H * 0.8);
+  } else if (videoPhase === 5) {
+    // Ending phase
+    const alpha = Math.max(1 - videoFrame / 60, 0);
+    ctx.globalAlpha = alpha;
+    ctx.font = 'bold ' + (W / 20) + 'px Cinzel';
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff2d55';
+    ctx.shadowColor = '#ff2d55';
+    ctx.shadowBlur = 40;
+    ctx.fillText('DISCOVER YOUR ARC', cx, cy);
+    ctx.shadowBlur = 0;
+    ctx.font = (W / 40) + 'px Inter';
+    ctx.fillStyle = '#a0a0a0';
+    ctx.fillText('villainarc.com', cx, cy + W / 15);
+  }
+  
+  // Progress bar
+  const progress = videoFrame / (phase.duration / 16.67);
+  ctx.fillStyle = 'rgba(255,45,85,0.3)';
+  ctx.fillRect(0, H - 4, W, 4);
+  ctx.fillStyle = '#ff2d55';
+  ctx.fillRect(0, H - 4, W * Math.min(progress, 1), 4);
+  
+  // Update phase
+  videoFrame++;
+  if (videoFrame >= phase.duration / 16.67) {
+    videoFrame = 0;
+    videoPhase++;
+    if (videoPhase >= VIDEO_PHASES.length) {
+      videoMode = false;
+      $('stage').classList.add('active');
+      stopNarration();
+      toast('Trailer complete!');
+    }
+  }
 }
 
 // ===== PREMIUM NARRATION =====
@@ -1227,6 +1375,13 @@ function loop() {
   ctx.clearRect(0, 0, W, H);
   ctx.fillStyle = '#050505'; ctx.fillRect(0, 0, W, H);
 
+  // Video mode takes priority
+  if (videoMode) {
+    drawVideoFrame();
+    requestAnimationFrame(loop);
+    return;
+  }
+
   parts.forEach(p => { p.u(); p.d_(); });
   embs.forEach(e => { e.u(); e.d_(); });
 
@@ -1490,6 +1645,7 @@ $('b-prophecy').addEventListener('click', showProphecy);
 $('b-legacy').addEventListener('click', showLegacy);
 $('b-merch').addEventListener('click', showMerch);
 $('b-narration').addEventListener('click', () => { initSpeech(); showNarration(); });
+$('b-video').addEventListener('click', startOriginVideo);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
