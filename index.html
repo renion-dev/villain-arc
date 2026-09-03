@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-hidden">HIDDEN</button>
+  <button class="nav-btn" id="b-prophecy">PROPHECY</button>
+<button class="nav-btn" id="b-hidden">HIDDEN</button>
 <button class="nav-btn" id="b-tournament">TOURNAMENT</button>
 <button class="nav-btn" id="b-relations">RELATIONS</button>
 <button class="nav-btn" id="b-universe">UNIVERSE</button>
@@ -356,6 +357,53 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== PROPHECY SYSTEM =====
+const PROPHECIES = [
+  "A villain born of {faction} shall rise to power...",
+  "When {region} falls, {villain} will emerge...",
+  "The {rarity} one approaches, bearer of {power}...",
+  "Beware the day when {villain} and {villain2} meet...",
+  "From the ashes of {region}, darkness will be reborn...",
+  "The {faction} seeks a new master... it will find one...",
+  "A force of {power} will shake the foundations of {region}...",
+  "The time of {villain} draws near... prepare yourself..."
+];
+
+function generateProphecy() {
+  const h = hash(Date.now().toString());
+  const r = rng(h);
+  let prophecy = pick(PROPHECIES, r);
+  
+  // Replace placeholders
+  const faction = pick(FACTIONS, r);
+  const region = pick(REGIONS, r);
+  const villain = pick(NAMES, r);
+  const villain2 = pick(NAMES, r);
+  const rarity = pick(Object.values(RARITY), r);
+  const power = pick(POWERS, r);
+  
+  prophecy = prophecy.replace('{faction}', faction.name);
+  prophecy = prophecy.replace('{region}', region.name);
+  prophecy = prophecy.replace('{villain}', villain);
+  prophecy = prophecy.replace('{villain2}', villain2);
+  prophecy = prophecy.replace('{rarity}', rarity.name);
+  prophecy = prophecy.replace('{power}', power.toLowerCase());
+  
+  return prophecy;
+}
+
+function showProphecy() {
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  const prophecy = generateProphecy();
+  
+  c.innerHTML += '<div class="prophecy-header"><span class="prophecy-icon">🔮</span><span class="prophecy-title">PROPHECY</span></div>';
+  c.innerHTML += '<div class="prophecy-text">' + prophecy + '</div>';
+  c.innerHTML += '<div class="prophecy-footer">The future is written in darkness...</div>';
+  
+  openModal('universe');
 }
 
 // ===== HIDDEN VILLAINS =====
@@ -1121,6 +1169,7 @@ $('b-universe').addEventListener('click', showUniverse);
 $('b-relations').addEventListener('click', showRelationships);
 $('b-tournament').addEventListener('click', showTournament);
 $('b-hidden').addEventListener('click', showHiddenVillains);
+$('b-prophecy').addEventListener('click', showProphecy);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
