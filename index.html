@@ -104,6 +104,7 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 .gallery-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 5px 20px rgba(255,45,85,0.15)}
 .gallery-name{font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:0.3rem}
 .gallery-epithet{font-family:var(--font-quote);font-size:0.7rem;font-style:italic;color:var(--accent2)}
+.gallery-rarity{font-family:var(--font-body);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:0.3rem}
 .empty-msg{grid-column:1/-1;text-align:center;color:var(--text3);font-style:italic;padding:2rem;font-family:var(--font-body);font-size:0.85rem}
 
 /* Achievements */
@@ -348,6 +349,26 @@ function save(){try{const s={...state,poses:[...state.poses],threats:[...state.t
 let state = load();
 
 // ===== GENERATE =====
+// ===== RARITY SYSTEM =====
+const RARITY = {
+  common:    { name: 'Common',    color: '#a0a0a0', chance: 50, glow: 'none' },
+  uncommon:  { name: 'Uncommon',  color: '#30d158', chance: 30, glow: '0 0 15px rgba(48,209,88,0.4)' },
+  rare:      { name: 'Rare',      color: '#64d2ff', chance: 12, glow: '0 0 20px rgba(100,210,255,0.5)' },
+  epic:      { name: 'Epic',      color: '#bf5af2', chance: 5,  glow: '0 0 25px rgba(191,90,242,0.6)' },
+  legendary: { name: 'Legendary', color: '#ff9f0a', chance: 2,  glow: '0 0 30px rgba(255,159,10,0.7)' },
+  mythic:    { name: 'Mythic',    color: '#ff2d55', chance: 1,  glow: '0 0 40px rgba(255,45,85,0.8)' }
+};
+
+function rollRarity(r) {
+  const roll = r() * 100;
+  let cumulative = 0;
+  for (const [key, val] of Object.entries(RARITY)) {
+    cumulative += val.chance;
+    if (roll < cumulative) return key;
+  }
+  return 'common';
+}
+
 function generate(name, trigger) {
   const h = hash(name.toLowerCase() + '|' + trigger);
   const r = rng(h);
@@ -357,8 +378,9 @@ function generate(name, trigger) {
   const threat = pick(THREATS, r);
   const quote = pick(QUOTES, r);
   const template = pick(STORY_TEMPLATES, r);
-  const backstory = template.replace(/{name}/g, name).replace(/{trigger}/g, trigger).replace(/{villain}/g, villain).replace(/{power}/g, power.toLowerCase());
-  return { villainName: villain, epithet, power, threat, quote, backstory };
+  const backstory = template.replace(/{name}/g, name).replace(/{trigger}/g, trigger).replace("{villain}", villain).replace("{power}", power.toLowerCase());
+  const rarity = rollRarity(r);
+  return { villainName: villain, epithet, power, threat, quote, backstory, rarity };
 }
 
 function dailyVillain() {
@@ -693,9 +715,11 @@ function startReveal() {
   updateState(arc);
 
   const fs = Math.min(W, H) / 25;
+  const rarity = RARITY[arc.rarity];
   txtQ = [
+    { t: rarity.name.toUpperCase(), y: H * 0.15, f: 'bold ' + fs * 0.25 + 'px Cinzel', c: rarity.color, g: rarity.glow },
     { t: 'ORIGIN STORY', y: H * 0.2, f: 'bold ' + fs * 0.35 + 'px Cinzel', c: '#ff2d55', g: '#ff2d55' },
-    { t: arc.villainName.toUpperCase(), y: H * 0.33, f: 'bold ' + fs * 0.55 + 'px Cinzel', c: '#ffffff', g: '#ff2d55' },
+    { t: arc.villainName.toUpperCase(), y: H * 0.33, f: 'bold ' + fs * 0.55 + 'px Cinzel', c: '#ffffff', g: rarity.glow },
     { t: '"' + arc.epithet + '"', y: H * 0.41, f: 'italic ' + fs * 0.3 + 'px Cormorant Garamond', c: '#bf5af2', g: '#bf5af2' },
     { t: arc.threat.l + ' — ' + arc.threat.n, y: H * 0.78, f: 'bold ' + fs * 0.25 + 'px Cinzel', c: arc.threat.c, g: arc.threat.c },
     { t: arc.power, y: H * 0.85, f: fs * 0.22 + 'px Cinzel', c: '#30d158', g: '#30d158' },
@@ -706,7 +730,7 @@ function startReveal() {
 
   setTimeout(() => { mode = 'portrait'; sfxChord([100, 150, 200, 300]); }, 3500);
   setTimeout(() => {
-    $('result').innerHTML = '<span class="result-main">' + arc.villainName + '</span><span class="result-sub">' + arc.epithet + ' • Threat: ' + arc.threat.l + ' • ' + arc.power + '</span>';
+    $('result').innerHTML = '<span class="result-main" style="text-shadow:' + rarity.glow + '">' + arc.villainName + '</span><span class="result-sub">' + rarity.name + ' • ' + arc.epithet + ' • Threat: ' + arc.threat.l + ' • ' + arc.power + '</span>';
     $('result').classList.add('show');
   }, 12000);
 }
@@ -773,7 +797,7 @@ function showGallery() {
       const k = h.n + '|' + h.e;
       if (seen.has(k)) return;
       seen.add(k);
-      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div></div>';
+      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div><div class="gallery-rarity" style="color:' + (h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0') + '">' + (h.r || 'common') + '</div></div>';
     });
   }
   openModal('gallery');
