@@ -1753,6 +1753,137 @@ function showUniverse() {
   openModal('universe');
 }
 
+// ===== UNIVERSE PAGE =====
+function showUniverse() {
+  // Create full-screen universe overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'universe-overlay';
+  overlay.style.cssText = `
+    position:fixed;inset:0;z-index:200;
+    background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;
+  `;
+  
+  overlay.innerHTML = `
+    <button class="universe-close" id="universe-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px;transition:all 0.3s">✕ CLOSE</button>
+    
+    <h2 class="universe-title" style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #ff2d55;margin-bottom:0.5rem;letter-spacing:0.1em">VILLAIN UNIVERSE</h2>
+    <p class="universe-subtitle" style="font-family:'Cormant Garamond',serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">The world of darkness</p>
+    
+    <div class="universe-map-container" style="position:relative;width:100%;max-width:800px;margin-bottom:2rem">
+      <div class="universe-map" style="position:relative;width:100%;height:300px;background:radial-gradient(ellipse at center,#1a0a1a 0%,#0a0508 70%);border-radius:12px;border:1px solid rgba(255,45,85,0.2);overflow:hidden">
+        <div class="map-bg-stars" style="position:absolute;top:0;left:0;width:100%;height:100%;background-image:radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 40px 70px, #fff, transparent), radial-gradient(1px 1px at 90px 40px, #fff, transparent), radial-gradient(2px 2px at 130px 80px, #fff, transparent), radial-gradient(1px 1px at 160px 120px, #fff, transparent);background-size:200px 100px;opacity:0.3"></div>
+        
+        <!-- Faction territories -->
+        <div class="faction-territory" style="position:absolute;top:20%;left:15%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#bf5af240 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="shadow">
+          <span style="color:#bf5af2;font-size:0.7rem;text-align:center">Shadow Syndicate</span>
+        </div>
+        <div class="faction-territory" style="position:absolute;top:50%;left:40%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#ff9f0a40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="iron">
+          <span style="color:#ff9f0a;font-size:0.7rem;text-align:center">Iron Legion</span>
+        </div>
+        <div class="faction-territory" style="position:absolute;top:30%;left:65%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#64d2ff40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="void">
+          <span style="color:#64d2ff;font-size:0.7rem;text-align:center">Void Collective</span>
+        </div>
+        <div class="faction-territory" style="position:absolute;top:60%;left:20%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#ff2d5540 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="blood">
+          <span style="color:#ff2d55;font-size:0.7rem;text-align:center">Blood Covenant</span>
+        </div>
+        <div class="faction-territory" style="position:absolute;top:70%;left:60%;width:120px;height:120px;border-radius:50%;background:radial-gradient(circle,#30d15840 0%,transparent 70%);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.3s" data-faction="storm">
+          <span style="color:#30d158;font-size:0.7rem;text-align:center">Storm Empire</span>
+        </div>
+      </div>
+    </div>
+    
+    <div class="universe-factions-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;max-width:800px;width:100%;margin-bottom:2rem">
+      ${FACTIONS.map(f => {
+        const count = state.history.filter(h => h.f && h.f.id === f.id).length;
+        return `<div class="faction-card" style="background:rgba(255,45,85,0.05);border:1px solid ${f.color}40;border-radius:12px;padding:1.5rem;cursor:pointer;transition:all 0.3s" data-faction="${f.id}">
+          <div style="display:flex;align-items:center;gap:0.8rem;margin-bottom:0.8rem">
+            <div style="width:40px;height:40px;border-radius:50%;background:${f.color}30;display:flex;align-items:center;justify-content:center">
+              <span style="font-size:1.2rem">${f.id === 'shadow' ? '🌑' : f.id === 'iron' ? '⚔️' : f.id === 'void' ? '🌀' : f.id === 'blood' ? '🩸' : '⚡'}</span>
+            </div>
+            <div>
+              <h4 style="color:${f.color};font-weight:700;margin:0">${f.name}</h4>
+              <span style="color:#666;font-size:0.7rem">${count} members</span>
+            </div>
+          </div>
+          <p style="color:#a0a0a0;font-size:0.85rem;margin:0">${f.desc}</p>
+        </div>`;
+      }).join('')}
+    </div>
+    
+    <div class="universe-regions" style="max-width:800px;width:100%;margin-bottom:2rem">
+      <h4 style="color:#ff2d55;margin-bottom:1rem;letter-spacing:0.1em">REGIONS</h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0.8rem">
+        ${REGIONS.map(r => {
+          const count = state.history.filter(h => h.g && h.g.id === r.id).length;
+          return `<div class="region-card" style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:1rem;text-align:center">
+            <span style="display:block;font-size:1.5rem;margin-bottom:0.3rem">${r.id === 'abyss' ? '🕳️' : r.id === 'citadel' ? '🏰' : r.id === 'void' ? '🌌' : r.id === 'crypt' ? '⚰️' : '⛈️'}</span>
+            <span style="display:block;color:#fff;font-weight:600;font-size:0.9rem">${r.name}</span>
+            <span style="display:block;color:#666;font-size:0.7rem">${count} villains</span>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+    
+    <div class="universe-stats" style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap">
+      <div style="text-align:center">
+        <span style="display:block;font-size:2rem;font-weight:900;color:#ff2d55">${state.factions.size}</span>
+        <span style="color:#666;font-size:0.8rem">Factions</span>
+      </div>
+      <div style="text-align:center">
+        <span style="display:block;font-size:2rem;font-weight:900;color:#bf5af2">${state.unique}</span>
+        <span style="color:#666;font-size:0.8rem">Villains</span>
+      </div>
+      <div style="text-align:center">
+        <span style="display:block;font-size:2rem;font-weight:900;color:#30d158">${state.total}</span>
+        <span style="color:#666;font-size:0.8rem">Total</span>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(overlay);
+  
+  // Animate in
+  setTimeout(() => overlay.style.opacity = '1', 50);
+  
+  // Add CSS
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes territory-pulse {
+      0%, 100% { transform: scale(1); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    .faction-territory:hover {
+      transform: scale(1.1) !important;
+      box-shadow: 0 0 30px currentColor;
+    }
+    .faction-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 25px rgba(255,45,85,0.2);
+    }
+    .universe-close:hover {
+      background: rgba(255,45,85,0.1) !important;
+      border-color: #ff2d55 !important;
+    }
+  `;
+  document.head.appendChild(style);
+  
+  // Event listeners
+  overlay.querySelector('#universe-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
+  });
+  
+  // Faction territory click animation
+  overlay.querySelectorAll('.faction-territory').forEach(t => {
+    t.addEventListener('click', () => {
+      t.style.animation = 'territory-pulse 0.5s ease';
+      setTimeout(() => t.style.animation = '', 500);
+    });
+  });
+}
+
 // Daily
 function showDaily() {
   const d = dailyVillain();
