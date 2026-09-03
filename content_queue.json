@@ -1,0 +1,50 @@
+{
+  "generated_at": "2026-09-03T11:21:42.194465",
+  "posts": [
+    {
+      "platform": "twitter",
+      "text": "They said I couldn't be a villain. Now I am Lord Void, master of Air Control. What's your arc? \u2192 https://renion-dev.github.io/villain-arc/\n#VillainOrigin #Cinematic #OriginStory",
+      "villain": {
+        "name": "Morgan",
+        "trigger": "The Loss",
+        "villain": "Lord Void",
+        "epithet": "The Salt Crown",
+        "power": "Air Control",
+        "threat": "B",
+        "quote": "I am the answer to prayers you should have never made.",
+        "backstory": "Once Morgan walked among the innocent, until The Loss shattered their world. From the ashes rose Lord Void, wielding air control as both weapon and curse."
+      },
+      "timestamp": "2026-09-03T11:21:42.192764"
+    },
+    {
+      "platform": "reddit",
+      "text": "I built a cinematic villain origin story generator. Enter your name and discover your inner villain. Mine is The Collector Prime, \"The Cursed Blade\", with the power of Soul Eater. What's yours?",
+      "villain": {
+        "name": "Avery",
+        "trigger": "The Betrayal",
+        "villain": "The Collector Prime",
+        "epithet": "The Cursed Blade",
+        "power": "Soul Eater",
+        "threat": "S",
+        "quote": "When no one else can be trusted \u2014 trust yourself. Only yourself.",
+        "backstory": "They called Avery a hero, until The Betrayal revealed the truth: heroes always fall. Now reborn as The Collector Prime, they command soul eater."
+      },
+      "timestamp": "2026-09-03T11:21:42.194287"
+    },
+    {
+      "platform": "tiktok",
+      "text": "I'm Vesper Omega, \"The Eternal Dusk\", Threat Level B. What villain did you get? \ud83e\uddb9\u200d\u2640\ufe0f",
+      "villain": {
+        "name": "Quinn",
+        "trigger": "The Exile",
+        "villain": "Vesper Omega",
+        "epithet": "The Eternal Dusk",
+        "power": "Illusion Mastery",
+        "threat": "B",
+        "quote": "I did not become a villain. The world made me one.",
+        "backstory": "The world betrayed Quinn, and The Exile was the final straw. Rising from despair as Vesper Omega, they now command illusion mastery."
+      },
+      "timestamp": "2026-09-03T11:21:42.194455"
+    }
+  ]
+}

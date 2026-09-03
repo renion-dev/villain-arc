@@ -1,0 +1,22 @@
+name: Generate Promotion Content
+on:
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate content
+        run: python3 generate_content.py
+
+      - name: Commit content
+        run: |
+          git config user.name "villain-arc-bot"
+          git config user.email "bot@villainarc.com"
+          git add content_queue.json agent_state.json
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto: Generate daily content $(date +%Y-%m-%d)"
+          git push
