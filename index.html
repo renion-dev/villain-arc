@@ -104,6 +104,7 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 .gallery-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 5px 20px rgba(255,45,85,0.15)}
 .gallery-name{font-size:0.8rem;font-weight:700;color:var(--text);margin-bottom:0.3rem}
 .gallery-epithet{font-family:var(--font-quote);font-size:0.7rem;font-style:italic;color:var(--accent2)}
+.gallery-threat{font-family:var(--font-display);font-size:0.7rem;font-weight:700}
 .gallery-rarity{font-family:var(--font-body);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.1em;margin-top:0.3rem}
 .empty-msg{grid-column:1/-1;text-align:center;color:var(--text3);font-style:italic;padding:2rem;font-family:var(--font-body);font-size:0.85rem}
 
@@ -280,12 +281,11 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <div id="toast"></div>
 
 <script>
-// ===== VILLAIN ARC ENGINE v4 =====
+// ===== VILLAIN ARC ENGINE v4.2 =====
 'use strict';
 
 // Canvas Setup
-const cv = document.getElementById('stage-canvas');
-const ctx = cv.getContext('2d');
+const cv = document.getElementById('stage-canvas'), ctx = cv.getContext('2d');
 let W, H, dpr;
 function resize() {
   dpr = Math.min(devicePixelRatio || 1, 2);
@@ -313,17 +313,42 @@ const QUOTES = ["I did not become a villain. The world made me one.","Heroes los
 
 const POSES = ['orbs','tendrils','wings','aura','shatter','spiral','lightning','void'];
 
-// Backstory templates
 const STORY_TEMPLATES = [
-  "Once {name} walked among the innocent, until {trigger} shattered their world. From the ashes rose {villain}, wielding {power} as both weapon and curse. Now the world will learn what it means to cross them.",
-  "{name} was once a beacon of hope, until {trigger} extinguished that light forever. Consumed by darkness, they became {villain} — a master of {power} who seeks not revenge, but remaking.",
-  "They called {name} a hero, until {trigger} revealed the truth: heroes always fall. Now reborn as {villain}, they command {power} and walk a darker path.",
-  "When {trigger} destroyed everything {name} loved, something inside them broke — and from that fracture emerged {villain}, a wielder of {power} who will never be broken again.",
-  "{name} did not choose darkness. Darkness chose them, the moment {trigger} tore their world apart. Now as {villain}, they wield {power} with terrifying purpose.",
-  "The world betrayed {name}, and {trigger} was the final straw. Rising from despair as {villain}, they now command {power} and answer to no one.",
-  "Before {trigger}, {name} was ordinary. After, they became {villain} — a master of {power} whose name is whispered in fear across the land.",
+  "Once {name} walked among the innocent, until {trigger} shattered their world. From the ashes rose {villain}, wielding {power} as both weapon and curse.",
+  "{name} was once a beacon of hope, until {trigger} extinguished that light forever. Consumed by darkness, they became {villain} — a master of {power}.",
+  "They called {name} a hero, until {trigger} revealed the truth: heroes always fall. Now reborn as {villain}, they command {power}.",
+  "When {trigger} destroyed everything {name} loved, something inside them broke — and from that fracture emerged {villain}, a wielder of {power}.",
+  "{name} did not choose darkness. Darkness chose them, the moment {trigger} tore their world apart. Now as {villain}, they wield {power}.",
+  "The world betrayed {name}, and {trigger} was the final straw. Rising from despair as {villain}, they now command {power}.",
+  "Before {trigger}, {name} was ordinary. After, they became {villain} — a master of {power} whose name is whispered in fear.",
   "{name} once believed in justice, until {trigger} proved it was a lie. Now as {villain}, they wield {power} and dispense their own brand of truth."
 ];
+
+// ===== RARITY SYSTEM =====
+const RARITY = {
+  common:    { name: 'Common',    color: '#a0a0a0', chance: 50, glow: 'none' },
+  uncommon:  { name: 'Uncommon',  color: '#30d158', chance: 30, glow: '0 0 15px rgba(48,209,88,0.4)' },
+  rare:      { name: 'Rare',      color: '#64d2ff', chance: 12, glow: '0 0 20px rgba(100,210,255,0.5)' },
+  epic:      { name: 'Epic',      color: '#bf5af2', chance: 5,  glow: '0 0 25px rgba(191,90,242,0.6)' },
+  legendary: { name: 'Legendary', color: '#ff9f0a', chance: 2,  glow: '0 0 30px rgba(255,159,10,0.7)' },
+  mythic:    { name: 'Mythic',    color: '#ff2d55', chance: 1,  glow: '0 0 40px rgba(255,45,85,0.8)' }
+};
+
+function rollRarity(r) {
+  const roll = r() * 100;
+  let cumulative = 0;
+  for (const [key, val] of Object.entries(RARITY)) {
+    cumulative += val.chance;
+    if (roll < cumulative) return key;
+  }
+  return 'common';
+}
+
+// ===== DYNAMIC PORTRAIT =====
+let mouseX = W / 2, mouseY = H / 2;
+let clickEffect = 0;
+addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+addEventListener('click', () => { clickEffect = 1; });
 
 // ===== STATE =====
 const SK = 'va_state_v4';
@@ -349,26 +374,6 @@ function save(){try{const s={...state,poses:[...state.poses],threats:[...state.t
 let state = load();
 
 // ===== GENERATE =====
-// ===== RARITY SYSTEM =====
-const RARITY = {
-  common:    { name: 'Common',    color: '#a0a0a0', chance: 50, glow: 'none' },
-  uncommon:  { name: 'Uncommon',  color: '#30d158', chance: 30, glow: '0 0 15px rgba(48,209,88,0.4)' },
-  rare:      { name: 'Rare',      color: '#64d2ff', chance: 12, glow: '0 0 20px rgba(100,210,255,0.5)' },
-  epic:      { name: 'Epic',      color: '#bf5af2', chance: 5,  glow: '0 0 25px rgba(191,90,242,0.6)' },
-  legendary: { name: 'Legendary', color: '#ff9f0a', chance: 2,  glow: '0 0 30px rgba(255,159,10,0.7)' },
-  mythic:    { name: 'Mythic',    color: '#ff2d55', chance: 1,  glow: '0 0 40px rgba(255,45,85,0.8)' }
-};
-
-function rollRarity(r) {
-  const roll = r() * 100;
-  let cumulative = 0;
-  for (const [key, val] of Object.entries(RARITY)) {
-    cumulative += val.chance;
-    if (roll < cumulative) return key;
-  }
-  return 'common';
-}
-
 function generate(name, trigger) {
   const h = hash(name.toLowerCase() + '|' + trigger);
   const r = rng(h);
@@ -410,7 +415,7 @@ function updateState(arc) {
     state.bestStreak = Math.max(state.bestStreak, state.streak);
     state.lastVisit = today;
   }
-  state.history.unshift({ n: arc.villainName, e: arc.epithet, p: arc.power, t: arc.threat.l, d: Date.now() });
+  state.history.unshift({ n: arc.villainName, e: arc.epithet, p: arc.power, t: arc.threat.l, r: arc.rarity, d: Date.now() });
   if (state.history.length > 50) state.history.pop();
   checkAch(); save();
 }
@@ -487,6 +492,18 @@ function drawPort(p) {
   const r = rng(hash(curName));
   const cx = W / 2, cy = H / 2, s = Math.min(W, H) / 800;
   const h1 = r() * 360, h2 = (h1 + 50 + r() * 80) % 360, ac = (h1 + 180) % 360;
+  
+  // Breathing animation
+  const breath = Math.sin(F * 0.025) * 0.02;
+  const headBreath = Math.sin(F * 0.03) * 3 * s;
+  
+  // Eye tracking
+  const eyeOffsetX = (mouseX - cx) / W * 8 * s;
+  const eyeOffsetY = (mouseY - cy) / H * 4 * s;
+  
+  // Click reaction
+  clickEffect *= 0.95;
+  const clickScale = 1 + clickEffect * 0.1;
 
   // BG
   const bg = ctx.createRadialGradient(cx, cy * 0.7, 0, cx, cy * 0.7, 350 * s);
@@ -522,12 +539,13 @@ function drawPort(p) {
 
   ctx.save(); ctx.globalAlpha = p * 0.85;
 
-  // Shoulders
+  // Shoulders with breathing
+  const shoulderY = cy + 100 * s + breath * 50 * s;
   ctx.fillStyle = 'hsl(' + h2 + ',25%,9%)';
-  ctx.beginPath(); ctx.moveTo(cx - 200 * s, H);
-  ctx.quadraticCurveTo(cx - 150 * s, cy + 100 * s, cx - 80 * s, cy + 80 * s);
-  ctx.quadraticCurveTo(cx, cy + 50 * s, cx + 80 * s, cy + 80 * s);
-  ctx.quadraticCurveTo(cx + 150 * s, cy + 100 * s, cx + 200 * s, H); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(cx - 200 * s * clickScale, H);
+  ctx.quadraticCurveTo(cx - 150 * s, shoulderY, cx - 80 * s, cy + 80 * s + breath * 30 * s);
+  ctx.quadraticCurveTo(cx, cy + 50 * s + breath * 20 * s, cx + 80 * s, cy + 80 * s + breath * 30 * s);
+  ctx.quadraticCurveTo(cx + 150 * s, shoulderY, cx + 200 * s * clickScale, H); ctx.fill();
 
   // Tendrils
   if (pose === 'tendrils') {
@@ -542,10 +560,10 @@ function drawPort(p) {
   }
 
   // Neck
-  ctx.fillStyle = 'hsl(' + h1 + ',35%,16%)'; ctx.fillRect(cx - 30 * s, cy + 20 * s, 60 * s, 80 * s);
+  ctx.fillStyle = 'hsl(' + h1 + ',35%,16%)'; ctx.fillRect(cx - 30 * s, cy + 20 * s + breath * 20 * s, 60 * s, 80 * s);
 
-  // Head
-  const hy = cy - 60 * s, rx = 70 * s + r() * 15 * s, ry = 90 * s + r() * 12 * s;
+  // Head with breathing
+  const hy = cy - 60 * s + headBreath, rx = 70 * s + r() * 15 * s, ry = 90 * s + r() * 12 * s;
   const hg = ctx.createRadialGradient(cx, hy, 0, cx, hy, ry);
   hg.addColorStop(0, 'hsl(' + h1 + ',45%,20%)'); hg.addColorStop(0.7, 'hsl(' + h2 + ',35%,11%)'); hg.addColorStop(1, 'hsl(' + h1 + ',25%,5%)');
   ctx.fillStyle = hg; ctx.beginPath(); ctx.ellipse(cx, hy, rx, ry, 0, 0, 6.283); ctx.fill();
@@ -556,16 +574,25 @@ function drawPort(p) {
   sh.addColorStop(0, 'rgba(0,0,0,0.8)'); sh.addColorStop(0.35, 'rgba(0,0,0,0.15)'); sh.addColorStop(0.5, 'rgba(0,0,0,0)'); sh.addColorStop(0.65, 'rgba(0,0,0,0.15)'); sh.addColorStop(1, 'rgba(0,0,0,0.8)');
   ctx.fillStyle = sh; ctx.beginPath(); ctx.ellipse(cx, hy, rx, ry, 0, 0, 6.283); ctx.fill();
 
-  // Eyes
+  // Eyes with tracking
   ctx.globalAlpha = p;
   const ey = hy - 10 * s, es = 25 * s, eg = Math.sin(F * 0.03) * 0.3 + 0.7;
+  
+  // Eye whites
+  ctx.fillStyle = 'rgba(255,255,255,0.1)';
+  ctx.beginPath(); ctx.ellipse(cx - es, ey, 12 * s, 6 * s, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + es, ey, 12 * s, 6 * s, 0, 0, 6.283); ctx.fill();
+  
+  // Iris with tracking
   ctx.fillStyle = 'hsla(' + ac + ',100%,60%,' + eg + ')'; ctx.shadowColor = 'hsl(' + ac + ',100%,60%)'; ctx.shadowBlur = 25;
-  ctx.beginPath(); ctx.ellipse(cx - es, ey, 8 * s, 4 * s, 0, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + es, ey, 8 * s, 4 * s, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx - es + eyeOffsetX, ey + eyeOffsetY, 6 * s, 4 * s, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + es + eyeOffsetX, ey + eyeOffsetY, 6 * s, 4 * s, 0, 0, 6.283); ctx.fill();
   ctx.shadowBlur = 0;
+  
+  // Pupils
   ctx.fillStyle = 'hsl(' + ac + ',100%,85%)';
-  ctx.beginPath(); ctx.ellipse(cx - es, ey, 3 * s, 3 * s, 0, 0, 6.283); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + es, ey, 3 * s, 3 * s, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx - es + eyeOffsetX, ey + eyeOffsetY, 3 * s, 3 * s, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(cx + es + eyeOffsetX, ey + eyeOffsetY, 3 * s, 3 * s, 0, 0, 6.283); ctx.fill();
 
   // Mask
   if (r() > 0.55) {
@@ -797,7 +824,8 @@ function showGallery() {
       const k = h.n + '|' + h.e;
       if (seen.has(k)) return;
       seen.add(k);
-      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div><div class="gallery-rarity" style="color:' + (h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0') + '">' + (h.r || 'common') + '</div></div>';
+      const rc = h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0';
+      g.innerHTML += '<div class="gallery-card"><div class="gallery-name">' + h.n + '</div><div class="gallery-epithet">' + h.e + '</div><div class="gallery-threat" style="color:' + (h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0') + '">' + h.t + '</div><div class="gallery-rarity" style="color:' + rc + '">' + (h.r || 'common') + '</div></div>';
     });
   }
   openModal('gallery');
