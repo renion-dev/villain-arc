@@ -2074,140 +2074,57 @@ function showGallery() {
 
 // ===== GALLERY PAGE =====
 function showGallery() {
-  // Create full-screen gallery overlay
   const overlay = document.createElement('div');
   overlay.id = 'gallery-overlay';
-  overlay.style.cssText = `
-    position:fixed;inset:0;z-index:200;
-    background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);
-    display:flex;flex-direction:column;align-items:center;justify-content:center;
-    opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;
-  `;
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
   
-  overlay.innerHTML = `
-    <button class="gallery-close" id="gallery-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px;transition:all 0.3s">✕ CLOSE</button>
-    
-    <h2 class="gallery-title" style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #bf5af2;margin-bottom:0.5rem;letter-spacing:0.1em">YOUR GALLERY</h2>
-    <p class="gallery-subtitle" style="font-family:'Cormorant Garamond',serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">Collection of darkness</p>
-    
-    <div class="gallery-stats" style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem">
-      <div style="text-align:center">
-        <span style="display:block;font-size:2rem;font-weight:900;color:#ff2d55">${state.unique}</span>
-        <span style="color:#666;font-size:0.8rem">Unique</span>
-      </div>
-      <div style="text-align:center">
-        <span style="display:block;font-size:2rem;font-weight:900;color:#bf5af2">${state.total}</span>
-        <span style="color:#666;font-size:0.8rem">Total</span>
-      </div>
-      <div style="text-align:center">
-        <span style="display:block;font-size:2rem;font-weight:900;color:#ff9f0a">${state.factions.size}</span>
-        <span style="color:#666;font-size:0.8rem">Factions</span>
-      </div>
-    </div>
-    
-    <div class="gallery-grid-container" style="width:100%;max-width:1000px">
-      ${state.history.length === 0 ? '<p class="empty-msg">No villains yet. Generate one!</p>' : 
-        `<div class="gallery-3d-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem">
-          ${(() => {
-            const seen = new Set();
-            return state.history.filter(h => {
-              const k = h.n + '|' + h.e;
-              if (seen.has(k)) return false;
-              seen.add(k);
-              return true;
-            }).slice(0, 20).map((h, i) => {
-              const rc = h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0';
-              const threatC = h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0';
-              const isLegendary = h.r === 'legendary' || h.r === 'mythic';
-              
-              return `<div class="gallery-card-3d ${isLegendary ? 'legendary-glow' : ''}" style="perspective:1000px;animation:card-float 3s ease-in-out infinite;animation-delay:${i * 0.1}s">
-                <div class="card-inner" style="position:relative;width:100%;height:250px;background:linear-gradient(145deg,rgba(255,45,85,0.1) 0%,rgba(191,90,242,0.05) 100%);border:1px solid ${rc}40;border-radius:16px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275);backdrop-filter:blur(10px)">
-                  <div class="card-glow" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,${rc}30 0%,transparent 70%);filter:blur(15px);opacity:0.5;transition:all 0.4s"></div>
-                  
-                  <div class="card-portrait" style="width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,${rc}40 0%,transparent 70%);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;border:2px solid ${rc};box-shadow:0 0 20px ${rc}60">
-                    <span style="font-size:2.5rem">🦹</span>
-                  </div>
-                  
-                  <div class="card-rarity-badge" style="position:absolute;top:10px;right:10px;background:${rc};color:#000;font-size:0.6rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;text-transform:uppercase">${h.r || 'common'}</div>
-                  
-                  <h4 class="card-name" style="color:#fff;font-weight:700;font-size:1rem;margin-bottom:0.3rem;text-align:center;text-shadow:0 0 10px ${rc}">${h.n}</h4>
-                  <p class="card-epithet" style="color:#bf5af2;font-size:0.75rem;font-style:italic;text-align:center;margin-bottom:0.5rem">${h.e}</p>
-                  
-                  <div class="card-details" style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center">
-                    <span class="card-threat" style="background:${threatC}20;color:${threatC};font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">${h.t}</span>
-                    <span class="card-power" style="background:#30d15820;color:#30d158;font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">${h.p}</span>
-                  </div>
-                  
-                  <div class="card-faction" style="position:absolute;bottom:10px;left:10px;color:${h.f ? h.f.color : '#666'};font-size:0.6rem">${h.f ? h.f.name : ''}</div>
-                </div>
-              </div>`;
-            }).join('')}
-          </div>`}
-        </div>
-      }
-    </div>
-    
-    <div class="gallery-actions" style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">
-      <button id="btn-export" style="background:linear-gradient(135deg,#ff2d55,#bf5af2);color:#fff;border:none;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.3s">📥 EXPORT ALL</button>
-      <button id="btn-share-gallery" style="background:transparent;border:1px solid #ff2d55;color:#ff2d55;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer;transition:all 0.3s">📤 SHARE</button>
-    </div>
-  `;
+  let cardsHtml = '';
+  if (state.history.length > 0) {
+    const seen = new Set();
+    state.history.forEach((h, i) => {
+      const k = h.n + '|' + h.e;
+      if (seen.has(k)) return;
+      seen.add(k);
+      const rc = h.r === 'mythic' ? '#ff2d55' : h.r === 'legendary' ? '#ff9f0a' : h.r === 'epic' ? '#bf5af2' : h.r === 'rare' ? '#64d2ff' : h.r === 'uncommon' ? '#30d158' : '#a0a0a0';
+      const threatC = h.t === 'S' ? '#ff2d55' : h.t === 'A' ? '#ff9f0a' : h.t === 'B' ? '#ffcc00' : h.t === 'C' ? '#64d2ff' : '#a0a0a0';
+      const isLegendary = h.r === 'legendary' || h.r === 'mythic';
+      cardsHtml += '<div class="gallery-card-3d' + (isLegendary ? ' legendary-glow' : '') + '" style="perspective:1000px;animation:card-float 3s ease-in-out infinite;animation-delay:' + (i * 0.1) + 's">';
+      cardsHtml += '<div class="card-inner" style="position:relative;width:100%;height:250px;background:linear-gradient(145deg,rgba(255,45,85,0.1),rgba(191,90,242,0.05));border:1px solid ' + rc + '40;border-radius:16px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all 0.4s cubic-bezier(0.175,0.885,0.32,1.275)">';
+      cardsHtml += '<div class="card-glow" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:100px;height:100px;border-radius:50%;background:radial-gradient(circle,' + rc + '30,transparent 70%);filter:blur(15px);opacity:0.5"></div>';
+      cardsHtml += '<div class="card-portrait" style="width:80px;height:80px;border-radius:50%;background:radial-gradient(circle,' + rc + '40,transparent 70%);display:flex;align-items:center;justify-content:center;margin-bottom:1rem;border:2px solid ' + rc + ';box-shadow:0 0 20px ' + rc + '60"><span style="font-size:2.5rem">&#x1F9B9;</span></div>';
+      cardsHtml += '<div class="card-rarity-badge" style="position:absolute;top:10px;right:10px;background:' + rc + ';color:#000;font-size:0.6rem;font-weight:700;padding:0.2rem 0.5rem;border-radius:4px;text-transform:uppercase">' + (h.r || 'common') + '</div>';
+      cardsHtml += '<h4 class="card-name" style="color:#fff;font-weight:700;font-size:1rem;margin-bottom:0.3rem;text-align:center;text-shadow:0 0 10px ' + rc + '">' + h.n + '</h4>';
+      cardsHtml += '<p class="card-epithet" style="color:#bf5af2;font-size:0.75rem;font-style:italic;text-align:center;margin-bottom:0.5rem">' + h.e + '</p>';
+      cardsHtml += '<div style="display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center"><span style="background:' + threatC + '20;color:' + threatC + ';font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">' + h.t + '</span><span style="background:#30d15820;color:#30d158;font-size:0.6rem;padding:0.2rem 0.4rem;border-radius:3px">' + h.p + '</span></div>';
+      cardsHtml += '<div style="position:absolute;bottom:10px;left:10px;color:' + (h.f ? h.f.color : '#666') + ';font-size:0.6rem">' + (h.f ? h.f.name : '') + '</div>';
+      cardsHtml += '</div></div>';
+    });
+  }
+  
+  overlay.innerHTML = '<button id="gallery-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #bf5af2;margin-bottom:0.5rem;letter-spacing:0.1em">YOUR GALLERY</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#bf5af2;margin-bottom:2rem">Collection of darkness</p>' +
+    '<div style="display:flex;gap:2rem;justify-content:center;flex-wrap:wrap;margin-bottom:2rem">' +
+    '<div style="text-align:center"><span style="display:block;font-size:2rem;font-weight:900;color:#ff2d55">' + state.unique + '</span><span style="color:#666;font-size:0.8rem">Unique</span></div>' +
+    '<div style="text-align:center"><span style="display:block;font-size:2rem;font-weight:900;color:#bf5af2">' + state.total + '</span><span style="color:#666;font-size:0.8rem">Total</span></div>' +
+    '<div style="text-align:center"><span style="display:block;font-size:2rem;font-weight:900;color:#ff9f0a">' + state.factions.size + '</span><span style="color:#666;font-size:0.8rem">Factions</span></div>' +
+    '</div>' +
+    '<div style="width:100%;max-width:1000px">' + (state.history.length === 0 ? '<p class="empty-msg">No villains yet. Generate one!</p>' : '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1.5rem">' + cardsHtml + '</div>') + '</div>' +
+    '<div style="margin-top:2rem;display:flex;gap:1rem;flex-wrap:wrap;justify-content:center">' +
+    '<button id="btn-export" style="background:linear-gradient(135deg,#ff2d55,#bf5af2);color:#fff;border:none;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">📥 EXPORT ALL</button>' +
+    '<button id="btn-share-gallery" style="background:transparent;border:1px solid #ff2d55;color:#ff2d55;padding:1rem 2rem;border-radius:6px;font-weight:600;cursor:pointer">📤 SHARE</button>' +
+    '</div>';
   
   document.body.appendChild(overlay);
-  
-  // Animate in
   setTimeout(() => overlay.style.opacity = '1', 50);
   
-  // Add CSS
   const style = document.createElement('style');
-  style.textContent = `
-    @keyframes card-float {
-      0%, 100% { transform: translateY(0) rotateY(0deg); }
-      50% { transform: translateY(-5px) rotateY(2deg); }
-    }
-    @keyframes legendary-pulse {
-      0%, 100% { box-shadow: 0 0 20px rgba(255,159,10,0.3); }
-      50% { box-shadow: 0 0 40px rgba(255,159,10,0.6), 0 0 60px rgba(255,45,85,0.3); }
-    }
-    .gallery-card-3d:hover .card-inner {
-      transform: translateY(-10px) scale(1.02) !important;
-      box-shadow: 0 10px 40px rgba(255,45,85,0.3) !important;
-      border-color: #ff2d55 !important;
-    }
-    .gallery-card-3d:hover .card-glow {
-      opacity: 0.8 !important;
-      transform: translate(-50%, -50%) scale(1.5) !important;
-    }
-    .legendary-glow .card-inner {
-      animation: legendary-pulse 2s ease-in-out infinite !important;
-    }
-    .gallery-close:hover {
-      background: rgba(255,45,85,0.1) !important;
-      border-color: #ff2d55 !important;
-    }
-    #btn-export:hover {
-      transform: scale(1.05);
-      box-shadow: 0 5px 25px rgba(255,45,85,0.5);
-    }
-    #btn-share-gallery:hover {
-      background: rgba(255,45,85,0.1) !important;
-    }
-  `;
+  style.textContent = '@keyframes card-float{0%,100%{transform:translateY(0) rotateY(0deg)}50%{transform:translateY(-5px) rotateY(2deg)}}@keyframes legendary-pulse{0%,100%{box-shadow:0 0 20px rgba(255,159,10,0.3)}50%{box-shadow:0 0 40px rgba(255,159,10,0.6),0 0 60px rgba(255,45,85,0.3)}}.gallery-card-3d:hover .card-inner{transform:translateY(-10px) scale(1.02)!important;box-shadow:0 10px 40px rgba(255,45,85,0.3)!important;border-color:#ff2d55!important}.legendary-glow .card-inner{animation:legendary-pulse 2s ease-in-out infinite!important}';
   document.head.appendChild(style);
   
-  // Event listeners
-  overlay.querySelector('#gallery-close').addEventListener('click', () => {
-    overlay.style.opacity = '0';
-    setTimeout(() => overlay.remove(), 1000);
-  });
-  
-  overlay.querySelector('#btn-export').addEventListener('click', () => {
-    toast('📥 Export coming soon...');
-  });
-  
-  overlay.querySelector('#btn-share-gallery').addEventListener('click', () => {
-    shareTwitter();
-  });
+  overlay.querySelector('#gallery-close').addEventListener('click', () => { overlay.style.opacity = '0'; setTimeout(() => overlay.remove(), 1000); });
+  overlay.querySelector('#btn-export').addEventListener('click', () => toast('📥 Export coming soon...'));
+  overlay.querySelector('#btn-share-gallery').addEventListener('click', () => shareTwitter());
 }
 
 // Awards
