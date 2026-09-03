@@ -187,6 +187,7 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
     <span class="brand-sub">Cinematic Engine v4</span>
   </div>
   <div class="top-stats">
+    <div class="stat-item"><span class="stat-val" id="s-level">1</span><span class="stat-label">Level</span></div>
     <div class="stat-item"><span class="stat-val" id="s-total">0</span><span class="stat-label">Total</span></div>
     <div class="stat-item"><span class="stat-val" id="s-unique">0</span><span class="stat-label">Unique</span></div>
     <div class="stat-item"><span class="stat-val" id="s-streak">0</span><span class="stat-label">Streak</span></div>
@@ -342,6 +343,27 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== EVOLUTION SYSTEM =====
+const EVOLUTION = {
+  1:  { name: 'Minion',      title: 'A humble beginning',        color: '#a0a0a0', size: 1.0 },
+  5:  { name: 'Henchman',    title: 'Rising through ranks',      color: '#30d158', size: 1.05 },
+  10: { name: 'Captain',      title: 'Leading the dark forces',   color: '#64d2ff', size: 1.1 },
+  15: { name: 'Commander',    title: 'Master of darkness',        color: '#bf5af2', size: 1.15 },
+  20: { name: 'Overlord',     title: 'Supreme villain',           color: '#ff9f0a', size: 1.2 }
+};
+
+function getEvolution(level) {
+  let evo = EVOLUTION[1];
+  for (const [lvl, data] of Object.entries(EVOLUTION)) {
+    if (level >= lvl) evo = data;
+  }
+  return evo;
+}
+
+function xpForLevel(level) {
+  return Math.floor(100 * Math.pow(1.5, level - 1));
 }
 
 // ===== DYNAMIC PORTRAIT =====
@@ -714,6 +736,8 @@ function loop() {
 // ===== UI =====
 const $ = id => document.getElementById(id);
 function updateUI() {
+  const level = Math.floor(state.total / 5) + 1;
+  $('s-level').textContent = level;
   $('s-total').textContent = state.total;
   $('s-unique').textContent = state.unique;
   $('s-streak').textContent = state.streak;
@@ -743,9 +767,11 @@ function startReveal() {
 
   const fs = Math.min(W, H) / 25;
   const rarity = RARITY[arc.rarity];
+  const evo = getEvolution(state.total + 1);
   txtQ = [
-    { t: rarity.name.toUpperCase(), y: H * 0.15, f: 'bold ' + fs * 0.25 + 'px Cinzel', c: rarity.color, g: rarity.glow },
-    { t: 'ORIGIN STORY', y: H * 0.2, f: 'bold ' + fs * 0.35 + 'px Cinzel', c: '#ff2d55', g: '#ff2d55' },
+    { t: rarity.name.toUpperCase(), y: H * 0.12, f: 'bold ' + fs * 0.25 + 'px Cinzel', c: rarity.color, g: rarity.glow },
+    { t: evo.name.toUpperCase(), y: H * 0.17, f: 'bold ' + fs * 0.2 + 'px Cinzel', c: evo.color, g: '0 0 15px ' + evo.color },
+    { t: 'ORIGIN STORY', y: H * 0.22, f: 'bold ' + fs * 0.35 + 'px Cinzel', c: '#ff2d55', g: '#ff2d55' },
     { t: arc.villainName.toUpperCase(), y: H * 0.33, f: 'bold ' + fs * 0.55 + 'px Cinzel', c: '#ffffff', g: rarity.glow },
     { t: '"' + arc.epithet + '"', y: H * 0.41, f: 'italic ' + fs * 0.3 + 'px Cormorant Garamond', c: '#bf5af2', g: '#bf5af2' },
     { t: arc.threat.l + ' — ' + arc.threat.n, y: H * 0.78, f: 'bold ' + fs * 0.25 + 'px Cinzel', c: arc.threat.c, g: arc.threat.c },
@@ -757,7 +783,7 @@ function startReveal() {
 
   setTimeout(() => { mode = 'portrait'; sfxChord([100, 150, 200, 300]); }, 3500);
   setTimeout(() => {
-    $('result').innerHTML = '<span class="result-main" style="text-shadow:' + rarity.glow + '">' + arc.villainName + '</span><span class="result-sub">' + rarity.name + ' • ' + arc.epithet + ' • Threat: ' + arc.threat.l + ' • ' + arc.power + '</span>';
+    $('result').innerHTML = '<span class="result-main" style="text-shadow:' + rarity.glow + '">' + arc.villainName + '</span><span class="result-sub">' + rarity.name + ' • ' + evo.name + ' • ' + arc.epithet + ' • Threat: ' + arc.threat.l + ' • ' + arc.power + '</span>';
     $('result').classList.add('show');
   }, 12000);
 }
