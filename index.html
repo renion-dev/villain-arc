@@ -1820,7 +1820,15 @@ function showUniverse() {
 // Relationships
 function showRelationships() {
   if (state.history.length < 2) { toast('Generate at least 2 villains to see relationships!'); return; }
-  const c = $('universe-content'); c.innerHTML = '';
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'relations-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;z-index:200;background:radial-gradient(ellipse at center,#0a0508 0%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;transition:opacity 1s ease;overflow-y:auto;padding:2rem;';
+  
+  overlay.innerHTML = '<button id="relations-close" style="position:absolute;top:1.5rem;right:1.5rem;background:transparent;border:1px solid rgba(255,45,85,0.3);color:#ff2d55;font-size:1.2rem;padding:0.5rem 1rem;cursor:pointer;border-radius:4px">✕ CLOSE</button>' +
+    '<h2 style="font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;text-shadow:0 0 40px #ff2d55;margin-bottom:0.5rem;letter-spacing:0.1em">RELATIONSHIPS</h2>' +
+    '<p style="font-family:Cormorant Garamond,serif;font-size:1.2rem;font-style:italic;color:#ff2d55;margin-bottom:2rem">Bonds of darkness</p>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;max-width:900px;width:100%">';
   
   const seen = new Set();
   const pairs = [];
@@ -1836,10 +1844,23 @@ function showRelationships() {
   }
   
   pairs.slice(0, 6).forEach(p => {
-    c.innerHTML += '<div class="rel-card"><span class="rel-icon">' + p.rel.icon + '</span><span class="rel-type">' + p.rel.name + '</span><span class="rel-villains">' + p.v1 + ' & ' + p.v2 + '</span><span class="rel-story">' + p.story + '</span></div>';
+    overlay.innerHTML += '<div style="background:rgba(255,45,85,0.05);border:1px solid rgba(255,45,85,0.2);border-radius:12px;padding:1.5rem;text-align:center;transition:all 0.3s">' +
+      '<span style="font-size:2.5rem;display:block;margin-bottom:0.5rem">' + p.rel.icon + '</span>' +
+      '<span style="color:#ff2d55;font-weight:700;font-size:1rem;display:block;margin-bottom:0.5rem">' + p.rel.name + '</span>' +
+      '<span style="color:#fff;font-weight:600;font-size:0.9rem;display:block;margin-bottom:0.5rem">' + p.v1 + ' & ' + p.v2 + '</span>' +
+      '<span style="color:#a0a0a0;font-size:0.8rem;line-height:1.5">' + p.story + '</span>' +
+      '</div>';
   });
   
-  openModal('universe');
+  overlay.innerHTML += '</div>';
+  
+  document.body.appendChild(overlay);
+  setTimeout(() => overlay.style.opacity = '1', 50);
+  
+  overlay.querySelector('#relations-close').addEventListener('click', () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => overlay.remove(), 1000);
+  });
 }
 
 // Universe
