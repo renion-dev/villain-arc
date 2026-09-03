@@ -217,7 +217,8 @@ canvas{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:
 <!-- Bottom Bar -->
 <nav id="bottom-bar">
   <button class="nav-btn" id="b-daily">DAILY</button>
-  <button class="nav-btn" id="b-relations">RELATIONS</button>
+  <button class="nav-btn" id="b-tournament">TOURNAMENT</button>
+<button class="nav-btn" id="b-relations">RELATIONS</button>
 <button class="nav-btn" id="b-universe">UNIVERSE</button>
 <button class="nav-btn" id="b-nemesis" disabled>NEMESIS</button>
   <button class="nav-btn" id="b-gallery">GALLERY</button>
@@ -354,6 +355,41 @@ function rollRarity(r) {
     if (roll < cumulative) return key;
   }
   return 'common';
+}
+
+// ===== WEEKLY TOURNAMENT =====
+const TOURNAMENT_THEMES = [
+  { id: 'tech', name: 'Best Tech Villain', desc: 'Masters of technology and machines' },
+  { id: 'dark', name: 'Darkest Villain', desc: 'Most evil and corrupt' },
+  { id: 'power', name: 'Most Powerful', desc: 'Raw destructive power' },
+  { id: 'cunning', name: 'Most Cunning', desc: 'Masters of deception' },
+  { id: 'chaos', name: 'Agent of Chaos', desc: 'Spreading mayhem and disorder' }
+];
+
+function getWeeklyTournament() {
+  const week = Math.floor(Date.now() / (7 * 24 * 60 * 60 * 1000));
+  const r = rng(hash('tournament_' + week));
+  return pick(TOURNAMENT_THEMES, r);
+}
+
+function showTournament() {
+  const t = getWeeklyTournament();
+  const c = $('universe-content'); c.innerHTML = '';
+  
+  c.innerHTML += '<div class="tournament-header"><span class="tournament-icon">🏆</span><span class="tournament-title">' + t.name + '</span><span class="tournament-desc">' + t.desc + '</span></div>';
+  
+  // Show top villains for voting
+  const topVillains = state.history.slice(0, 6);
+  if (topVillains.length < 2) {
+    c.innerHTML += '<p class="empty-msg">Generate at least 2 villains to participate!</p>';
+  } else {
+    c.innerHTML += '<h4 style="color:#ff2d55;margin:1rem 0">VOTE FOR YOUR FAVORITE</h4>';
+    topVillains.forEach((h, i) => {
+      c.innerHTML += '<div class="tournament-card" data-idx="' + i + '"><span class="tournament-rank">#' + (i + 1) + '</span><span class="tournament-name">' + h.n + '</span><span class="tournament-epithet">' + h.e + '</span><span class="tournament-votes">' + Math.floor(Math.random() * 100) + ' votes</span></div>';
+    });
+  }
+  
+  openModal('universe');
 }
 
 // ===== RELATIONSHIPS =====
@@ -1038,6 +1074,7 @@ $('name-input').addEventListener('keydown', e => { if (e.key === 'Enter') startR
 $('b-daily').addEventListener('click', showDaily);
 $('b-universe').addEventListener('click', showUniverse);
 $('b-relations').addEventListener('click', showRelationships);
+$('b-tournament').addEventListener('click', showTournament);
 $('b-nemesis').addEventListener('click', startNemesis);
 $('b-gallery').addEventListener('click', showGallery);
 $('b-awards').addEventListener('click', showAwards);
